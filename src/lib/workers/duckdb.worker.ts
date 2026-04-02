@@ -22,8 +22,8 @@
  */
 
 import * as duckdb from '@duckdb/duckdb-wasm'
-import duckdb_wasm from '@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url'
-import mvp_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url'
+import duckdb_wasm from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url'
+import eh_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url'
 import { tableToIPC, tableFromIPC } from 'apache-arrow'
 
 // ---------------------------------------------------------------------------
@@ -42,9 +42,10 @@ async function initDuckDB(): Promise<void> {
   // This makes it work on GitHub Pages without COOP/COEP headers at the network
   // level (coi-serviceworker handles that separately).
   const MANUAL_BUNDLES: duckdb.DuckDBBundles = {
-    mvp: {
+    eh: {
       mainModule: duckdb_wasm,
-      mainWorker: mvp_worker,
+      mainWorker: eh_worker,
+      pthreadWorker: null,
     },
   }
 
