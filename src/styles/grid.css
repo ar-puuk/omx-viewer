@@ -1,0 +1,396 @@
+/* ==========================================================================
+   grid.css — VirtualGrid layout, cell dimensions, sticky headers,
+   pinned cell highlight, row/col header styles.
+   All cell dimensions set via CSS variables — no dynamic JS calculation.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Grid Dimension Tokens
+   Cell dimensions must be set ONCE here via CSS variables.
+   Never calculate dynamically in JS on every render (no layout thrash).
+   -------------------------------------------------------------------------- */
+
+:root {
+  --grid-row-height:      32px;      /* height of each data row */
+  --grid-col-width:       88px;      /* width of each data column */
+  --grid-header-height:   32px;      /* height of the sticky column-header row */
+  --grid-row-header-width: 72px;     /* width of the sticky row-index column */
+  --grid-font-size:       var(--font-size-sm);
+  --grid-cell-padding-h:  var(--space-4);
+  --grid-cell-padding-v:  0px;       /* vertical centering via flex, not padding */
+}
+
+/* --------------------------------------------------------------------------
+   2. Outer Scroll Container
+   The element that TanStack Virtual attaches its scroll listener to.
+   -------------------------------------------------------------------------- */
+
+.grid-scroll-container {
+  position: relative;
+  overflow: auto;
+  flex: 1 1 0;
+  /* Use will-change to promote to its own compositor layer */
+  will-change: scroll-position;
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
+  background: var(--color-bg-base);
+  /* Clip overflow to prevent sticky header bleed */
+  isolation: isolate;
+}
+
+.grid-scroll-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.grid-scroll-container::-webkit-scrollbar-track {
+  background: var(--color-bg-surface);
+}
+
+.grid-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbar-thumb);
+  border-radius: var(--radius-full);
+}
+
+/* --------------------------------------------------------------------------
+   3. Virtual Spacer — the element whose size drives the scrollbar
+   TanStack Virtual sets totalSize on this element.
+   -------------------------------------------------------------------------- */
+
+.grid-total-size {
+  position: relative;
+  /* width and height set inline by TanStack Virtual via style attribute */
+}
+
+/* --------------------------------------------------------------------------
+   4. Sticky Corner, Column Header Row, Row Header Column
+   The sticky corner cell sits at the intersection of the fixed header row
+   and the fixed row-index column. Both must not scroll.
+   -------------------------------------------------------------------------- */
+
+.grid-header-row {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  display: flex;
+  align-items: stretch;
+  background: var(--color-header-bg);
+  border-bottom: 1px solid var(--color-border-strong);
+  height: var(--grid-header-height);
+  /* Prevent the header from participating in virtual scroll width */
+  width: max-content;
+  min-width: 100%;
+}
+
+/* The top-left corner cell — sits above the row index column */
+.grid-corner-cell {
+  position: sticky;
+  left: 0;
+  z-index: calc(var(--z-sticky) + 1);
+  width: var(--grid-row-header-width);
+  min-width: var(--grid-row-header-width);
+  flex-shrink: 0;
+  background: var(--color-header-bg);
+  border-right: 1px solid var(--color-border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Individual column header cells */
+.grid-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 var(--grid-cell-padding-h);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  letter-spacing: var(--letter-spacing-wide);
+  border-right: 1px solid var(--color-border);
+  height: var(--grid-header-height);
+  flex-shrink: 0;
+  user-select: none;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  /* width set inline by TanStack Virtual */
+}
+
+.grid-col-header:last-child {
+  border-right: none;
+}
+
+/* Highlighted column header — matches the pinned cell's column */
+.grid-col-header.is-pinned {
+  background: var(--color-header-pinned);
+  color: var(--color-accent);
+}
+
+/* --------------------------------------------------------------------------
+   5. Data Rows — TanStack Virtual positions each row absolutely
+   -------------------------------------------------------------------------- */
+
+.grid-data-area {
+  position: relative;
+  /* Height set inline by TanStack Virtual (totalSize) */
+}
+
+/* Each virtual row — positioned absolutely by TanStack */
+.grid-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: stretch;
+  width: max-content;
+  min-width: 100%;
+  /* translateY set inline by TanStack Virtual */
+  border-bottom: 1px solid var(--color-border);
+  height: var(--grid-row-height);
+  transition: background-color var(--transition-fast);
+}
+
+.grid-row:hover {
+  background: var(--color-cell-hover);
+}
+
+/* Highlighted row — matches the pinned cell's row */
+.grid-row.is-pinned-row {
+  background: rgba(79, 142, 247, 0.04);
+}
+
+/* --------------------------------------------------------------------------
+   6. Row Index (Header) Column — sticky left
+   -------------------------------------------------------------------------- */
+
+.grid-row-header {
+  position: sticky;
+  left: 0;
+  z-index: var(--z-raised);
+  width: var(--grid-row-header-width);
+  min-width: var(--grid-row-header-width);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 var(--grid-cell-padding-h);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  background: var(--color-header-bg);
+  border-right: 1px solid var(--color-border-strong);
+  user-select: none;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+/* Highlighted row header — matches the pinned cell's row */
+.grid-row-header.is-pinned {
+  background: var(--color-header-pinned);
+  color: var(--color-accent);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* --------------------------------------------------------------------------
+   7. Data Cells
+   -------------------------------------------------------------------------- */
+
+.grid-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;   /* right-align numbers */
+  padding: 0 var(--grid-cell-padding-h);
+  font-family: var(--font-mono);
+  font-size: var(--grid-font-size);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--letter-spacing-tight);
+  border-right: 1px solid var(--color-border);
+  height: var(--grid-row-height);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--transition-fast);
+  flex-shrink: 0;
+  /* width set inline by TanStack Virtual */
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.grid-cell:last-child {
+  border-right: none;
+}
+
+.grid-cell:hover {
+  background: var(--color-cell-hover);
+}
+
+/* Value color coding */
+.grid-cell.value-positive {
+  color: var(--color-text-primary);
+}
+
+.grid-cell.value-zero {
+  color: var(--color-zero);
+}
+
+.grid-cell.value-negative {
+  color: var(--color-negative);
+}
+
+/* Pinned (selected) cell — distinct ring/outline */
+.grid-cell.is-pinned {
+  background: var(--color-cell-selected);
+  outline: 2px solid var(--color-cell-pinned-ring);
+  outline-offset: -2px;
+  color: var(--color-accent);
+  font-weight: var(--font-weight-semibold);
+  z-index: var(--z-raised);
+  position: relative;
+}
+
+/* Hover should not override pinned ring */
+.grid-cell.is-pinned:hover {
+  background: var(--color-cell-selected);
+}
+
+/* Column-highlight when the cell's column matches the pinned column */
+.grid-cell.is-pinned-col {
+  background: rgba(79, 142, 247, 0.04);
+}
+
+/* Loading / skeleton state for cells not yet fetched */
+.grid-cell.is-loading {
+  pointer-events: none;
+}
+
+.grid-cell.is-loading::after {
+  content: '';
+  display: block;
+  width: 60%;
+  height: 10px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-sm);
+  animation: skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.8; }
+}
+
+/* NaN / invalid value indicator */
+.grid-cell.is-nan {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* --------------------------------------------------------------------------
+   8. Grid Container — ViewerLayout integration
+   -------------------------------------------------------------------------- */
+
+.grid-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  overflow: hidden;
+  position: relative;
+  background: var(--color-bg-base);
+}
+
+/* --------------------------------------------------------------------------
+   9. Summary Table (rendered in SummaryPanel — not the matrix grid)
+   -------------------------------------------------------------------------- */
+
+.summary-table-container {
+  overflow: auto;
+  max-height: 240px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-scrollbar-thumb) transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-table thead {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-raised);
+  background: var(--color-summary-header-bg);
+}
+
+.summary-table th {
+  padding: var(--space-2) var(--space-6);
+  text-align: right;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  letter-spacing: var(--letter-spacing-wide);
+  border-bottom: 1px solid var(--color-border-strong);
+  white-space: nowrap;
+}
+
+.summary-table th:first-child {
+  text-align: left;
+  color: var(--color-text-muted);
+}
+
+.summary-table td {
+  padding: var(--space-2) var(--space-6);
+  text-align: right;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.summary-table td:first-child {
+  text-align: left;
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.summary-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.summary-table tbody tr:hover td {
+  background: var(--color-cell-hover);
+}
+
+/* --------------------------------------------------------------------------
+   10. Matrix Grid Empty / Error States
+   -------------------------------------------------------------------------- */
+
+.grid-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: var(--space-8);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+  padding: var(--space-32);
+  text-align: center;
+}
+
+.grid-empty-state svg {
+  opacity: 0.3;
+}
+
+.grid-error-state {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-8) var(--space-12);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-md);
+  color: var(--color-error-text);
+  font-size: var(--font-size-sm);
+  margin: var(--space-8);
+}

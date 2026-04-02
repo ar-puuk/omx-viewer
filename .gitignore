@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.svelte-kit/
+
+# h5wasm WASM files copied by postinstall (regenerated on npm install)
+public/h5wasm/
+
+# coi-serviceworker copied by postinstall (regenerated on npm install)
+public/coi-serviceworker.js
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Type-check output
+tsconfig.tsbuildinfo
+
+# Test coverage
+coverage/

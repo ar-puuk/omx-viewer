@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      coi-serviceworker MUST be the very first script tag.
+      It installs a Service Worker that adds COOP/COEP headers client-side,
+      enabling SharedArrayBuffer and Wasm features on GitHub Pages where
+      custom HTTP response headers cannot be configured.
+    -->
+    <script src="/omx-viewer/coi-serviceworker.js"></script>
+
+    <title>OMX Viewer — Browser-native HDF5 matrix explorer</title>
+    <meta
+      name="description"
+      content="Explore OMX and HDF5 matrix files in your browser. No upload, no server. All processing happens locally via WebAssembly."
+    />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="OMX Viewer" />
+    <meta property="og:description" content="Browser-native HDF5 matrix explorer — no server, no upload, no limits." />
+    <meta property="og:type" content="website" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/omx-viewer/favicon.svg" />
+
+    <!--
+      Google Fonts: IBM Plex Mono (matrix cells, indices, code) +
+      IBM Plex Sans (UI chrome, labels, prose).
+      display=swap prevents FOIT while fonts load.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--
+      Inline critical CSS: set dark theme on <html> before any paint to prevent
+      flash of unstyled / light-themed content.
+    -->
+    <style>
+      html {
+        background-color: #0a0b0d;
+        color: #e8eaf0;
+      }
+      #app {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

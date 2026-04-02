@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Top-left cell: outline only -->
+  <rect x="1" y="1" width="13" height="13" rx="2.5" stroke="#4f8ef7" stroke-width="1.5" fill="none"/>
+  <!-- Top-right cell: outline only -->
+  <rect x="18" y="1" width="13" height="13" rx="2.5" stroke="#4f8ef7" stroke-width="1.5" fill="none"/>
+  <!-- Bottom-left cell: outline only -->
+  <rect x="1" y="18" width="13" height="13" rx="2.5" stroke="#4f8ef7" stroke-width="1.5" fill="none"/>
+  <!-- Bottom-right cell: filled accent — the "active" cell -->
+  <rect x="18" y="18" width="13" height="13" rx="2.5" fill="#4f8ef7" stroke="#4f8ef7" stroke-width="1.5"/>
+</svg>
