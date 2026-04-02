@@ -24,7 +24,7 @@
 import * as duckdb from '@duckdb/duckdb-wasm'
 import duckdb_wasm from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url'
 import eh_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url'
-import { tableToIPC, tableFromIPC } from 'apache-arrow'
+import { tableToIPC } from 'apache-arrow'
 
 // ---------------------------------------------------------------------------
 // DuckDB Instance (module-scoped)
@@ -72,6 +72,9 @@ async function initDuckDB(): Promise<void> {
  * Registers an Arrow IPC batch as part of a DuckDB table.
  * If isFirst=true, drops the existing table and creates a fresh one.
  * Subsequent batches with isFirst=false INSERT into the existing table.
+ *
+ * Uses DuckDB-Wasm's native insertArrowFromIPCStream API rather than
+ * registerFileBuffer + read_ipc_file (which doesn't exist in DuckDB-Wasm).
  */
 async function registerBatch(
   tableName: string,
@@ -80,31 +83,16 @@ async function registerBatch(
 ): Promise<void> {
   if (!conn) throw new Error('DuckDB not initialised')
 
-  // Register the Arrow buffer as a named view in DuckDB
-  const viewName = `_ipc_${tableName}_${Date.now()}`
-  await db!.registerFileBuffer(`${viewName}.arrow`, ipc)
-
   if (isFirst) {
-    // Drop existing table if present, create from first batch
     await conn.query(`DROP TABLE IF EXISTS "${tableName}"`)
-    await conn.query(`
-      CREATE TABLE "${tableName}" AS
-      SELECT * FROM read_ipc_file('${viewName}.arrow')
-    `)
-  } else {
-    // Append subsequent batches
-    await conn.query(`
-      INSERT INTO "${tableName}"
-      SELECT * FROM read_ipc_file('${viewName}.arrow')
-    `)
   }
 
-  // Clean up the temporary file buffer
-  try {
-    await db!.dropFile(`${viewName}.arrow`)
-  } catch {
-    // Non-fatal
-  }
+  // insertArrowFromIPCStream is the DuckDB-Wasm native API for loading
+  // Arrow IPC data directly into a table — no file buffer intermediary.
+  await conn.insertArrowFromIPCStream(ipc, {
+    name: tableName,
+    create: isFirst,
+  })
 }
 
 // ---------------------------------------------------------------------------
