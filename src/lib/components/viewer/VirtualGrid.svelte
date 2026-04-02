@@ -12,6 +12,7 @@
     ROW_HEIGHT, COL_WIDTH,
     GRID_ROW_OVERSCAN, GRID_COL_OVERSCAN,
     DEFAULT_ROW_CHUNK_SIZE,
+    SCROLL_DEBOUNCE_MS,
   } from '../../utils/constants.js'
   import { logger } from '../../utils/logger.js'
 
@@ -22,13 +23,16 @@
 
   let scrollContainer = $state<HTMLElement | null>(null)
   let scrollError = $state<string | null>(null)
-  let debounceTimer: ReturnType<typeof setTimeout>
 
   // Virtualizer stores — created once container is available
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let rowVirt = $state<Readable<any> | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let colVirt = $state<Readable<any> | null>(null)
+
+  // Visible row range tracked from virtualizer subscription
+  let visibleFirstRow = $state(-1)
+  let visibleLastRow = $state(-1)
 
   // Create virtualizers when the scroll container binds and nrows/ncols are known
   $effect(() => {
@@ -50,6 +54,66 @@
     })
   })
 
+  // Subscribe to row virtualizer to track visible range reactively.
+  // This replaces the old inline template call to scheduleRowFetch(),
+  // which reset the debounce timer on every Svelte render cycle.
+  $effect(() => {
+    if (!rowVirt) return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const unsub = rowVirt.subscribe((rv: any) => {
+      const items = rv.getVirtualItems()
+      if (items.length > 0) {
+        visibleFirstRow = items[0].index
+        visibleLastRow = items[items.length - 1].index
+      }
+    })
+    return unsub
+  })
+
+  // Debounced data fetching — runs when visible range or active tab changes.
+  // Uses $effect cleanup for debounce: each re-run clears the previous timer.
+  $effect(() => {
+    if (visibleFirstRow < 0) return
+    void store.activeTabId  // re-run when active tab changes
+
+    const firstRow = visibleFirstRow
+    const lastRow = visibleLastRow
+
+    const timer = setTimeout(() => {
+      const tab = store.activeTab
+      if (!tab || store.ncols === 0 || tab.isEphemeral) return
+
+      const chunkSize = DEFAULT_ROW_CHUNK_SIZE
+      const firstChunk = Math.floor(firstRow / chunkSize) * chunkSize
+      const lastChunk = Math.floor(lastRow / chunkSize) * chunkSize
+
+      // Fetch ALL chunks spanning the visible range
+      for (let cs = firstChunk; cs <= lastChunk; cs += chunkSize) {
+        if (tab.cachedRows.has(cs)) {
+          store.touchCacheEntry(tab.id, cs)
+          continue
+        }
+        try {
+          logger.time(`VirtualGrid:fetch chunk ${cs}`)
+          sliceMatrixRows(
+            tab.id,
+            cs,
+            Math.min(cs + chunkSize, store.nrows),
+            store.ncols,
+            tab.id,
+            tab.cachedRows
+          )
+          logger.timeEnd(`VirtualGrid:fetch chunk ${cs}`)
+        } catch (err) {
+          scrollError = err instanceof Error ? err.message : 'Failed to load matrix data'
+          logger.error('VirtualGrid: slice error', err)
+        }
+      }
+    }, SCROLL_DEBOUNCE_MS)
+
+    return () => clearTimeout(timer)
+  })
+
   // Expose scrollToCell for CellNavigator
   $effect(() => {
     scrollToCell = (row: number, col: number) => {
@@ -63,38 +127,11 @@
     }
   })
 
-  // Fetch row data with 50ms debounce
-  function scheduleRowFetch(firstRow: number) {
-    clearTimeout(debounceTimer)
-    debounceTimer = setTimeout(() => {
-      const tab = store.activeTab
-      if (!tab || store.ncols === 0 || tab.isEphemeral) return
-
-      const chunkSize = DEFAULT_ROW_CHUNK_SIZE
-      const chunkStart = Math.floor(firstRow / chunkSize) * chunkSize
-
-      if (tab.cachedRows.has(chunkStart)) {
-        store.touchCacheEntry(tab.id, chunkStart)
-        return
-      }
-
-      try {
-        sliceMatrixRows(
-          tab.id,
-          chunkStart,
-          Math.min(chunkStart + chunkSize, store.nrows),
-          store.ncols,
-          tab.id,
-          tab.cachedRows
-        )
-      } catch (err) {
-        scrollError = err instanceof Error ? err.message : 'Failed to load matrix data'
-        logger.error('VirtualGrid: slice error', err)
-      }
-    }, 50)
-  }
-
   function getCellValue(row: number, col: number): number | null {
+    // Reading cacheVersion creates a reactive dependency so Svelte re-renders
+    // cells when new chunks arrive. Map.set() is not tracked by Svelte 5's
+    // proxy system, so without this the grid never updates after data loads.
+    void store.cacheVersion
     const tab = store.activeTab
     if (!tab) return null
     if (tab.isEphemeral && tab.ephemeralData) {
@@ -151,11 +188,6 @@
       {@const virtualCols = cv.getVirtualItems()}
       {@const totalHeight = rv.getTotalSize()}
       {@const totalWidth  = cv.getTotalSize()}
-
-      <!-- Trigger debounced fetch whenever visible rows change -->
-      {#if virtualRows.length > 0}
-        {scheduleRowFetch(virtualRows[0].index)}
-      {/if}
 
       <!-- Sticky column header row -->
       <div class="grid-header-row" style="width:{totalWidth + ROW_HEADER_WIDTH}px;">

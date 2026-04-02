@@ -115,6 +115,7 @@ class AppState {
   navigatorCol = $state('')
   duckdbReady = $state(false)
   errors = $state<AppError[]>([])
+  cacheVersion = $state(0)
 
   // Derived
   get activeTab() { return this.tabs.find((t) => t.id === this.activeTabId) ?? null }
@@ -174,6 +175,8 @@ class AppState {
     tab.cacheAccessOrder.push(chunkStart)
     tab.cachedRows.set(chunkStart, data)
     while (tab.cacheAccessOrder.length > maxChunks) tab.cachedRows.delete(tab.cacheAccessOrder.shift()!)
+    // Increment version to notify Svelte — Map.set() is not tracked by $state proxy
+    this.cacheVersion++
   }
 
   touchCacheEntry(tabId: string, chunkStart: number) {
