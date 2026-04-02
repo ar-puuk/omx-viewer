@@ -31,18 +31,24 @@ import { logger } from '../utils/logger.js'
 
 // ---------------------------------------------------------------------------
 // Module-level h5wasm state
-// h5wasm is a singleton — initialise once per page load.
+// h5wasm self-initialises via its `ready` promise — there is no factory
+// function to call. We just await `ready` once and then use the named
+// exports (File, FS) directly.
 // ---------------------------------------------------------------------------
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type H5Module = any
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type H5File = any
+type H5FileType = any
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type H5Dataset = any
 
-let h5module: H5Module | null = null
-let h5file: H5File | null = null
+/** The h5wasm FS object — available after ready resolves. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let h5FS: any = null
+/** The h5wasm File constructor — available after ready resolves. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let H5FileClass: any = null
+
+let h5file: H5FileType | null = null
 
 /** Per-matrix aligned chunk sizes (set on first open). */
 const matrixChunkSizes = new Map<string, number>()
@@ -59,20 +65,18 @@ const matrixChunkSizes = new Map<string, number>()
  * @returns - The initialised h5wasm module.
  * @throws  - If the WASM binary cannot be loaded.
  */
-export async function initH5Wasm(): Promise<H5Module> {
-  if (h5module) return h5module
+export async function initH5Wasm(): Promise<void> {
+  if (H5FileClass) return  // already initialised
 
   logger.time('h5wasmService:init')
-  // Dynamic import — keeps h5wasm out of the initial bundle
-  const h5wasmModule = await import('h5wasm')
-  // h5wasm default export is the init function in the main entry
-  const initFn = h5wasmModule.default ?? h5wasmModule
-  h5module = await (typeof initFn === 'function' ? initFn : initFn.default)({
-    locateFile: (filename: string) => `/omx-viewer/h5wasm/${filename}`
-  })
+  // h5wasm self-initialises — no factory function.
+  // Await the `ready` promise, then grab the File constructor and FS.
+  const h5wasm = await import('h5wasm')
+  await h5wasm.ready
+  H5FileClass = h5wasm.File
+  h5FS = h5wasm.FS
   logger.timeEnd('h5wasmService:init')
   logger.log('h5wasmService: h5wasm initialised')
-  return h5module
 }
 
 // ---------------------------------------------------------------------------
@@ -104,7 +108,7 @@ export async function openOMXFile(file: File): Promise<MatrixFile> {
   }
 
   // Step 2: Ensure h5wasm is ready
-  const mod = await initH5Wasm()
+  await initH5Wasm()
 
   // Step 3: Close any previously open file
   closeCurrentFile()
@@ -117,13 +121,13 @@ export async function openOMXFile(file: File): Promise<MatrixFile> {
 
   // h5wasm uses Emscripten's virtual FS — write to /work/
   const vfsPath = `/work/${file.name}`
-  mod.FS.mkdirTree('/work')
-  mod.FS.writeFile(vfsPath, uint8)
+  try { h5FS.mkdirTree('/work') } catch { /* already exists */ }
+  h5FS.writeFile(vfsPath, uint8)
 
   // Step 5: Open the file
   logger.time('h5wasmService:openFile')
   try {
-    h5file = new mod.File(vfsPath, 'r')
+    h5file = new H5FileClass(vfsPath, 'r')
   } catch (err) {
     throw new OMXValidationError(
       'This file does not appear to be a valid HDF5/OMX file.'
@@ -475,6 +479,6 @@ export function isFileOpen(): boolean {
  * Returns the raw h5wasm File object for direct access when needed.
  * Use sparingly — prefer the typed service functions above.
  */
-export function getRawH5File(): H5File | null {
+export function getRawH5File(): H5FileType | null {
   return h5file
 }
