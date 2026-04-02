@@ -88,9 +88,11 @@ export function validateOMXStructure(h5File: {
   // eslint-disable-next-line no-console
   console.log('[omxParser] root attrs:', Object.keys(h5File.attrs))
 
-  // 1. Check /matrices/ group exists — try both 'matrices' and '/matrices'
+  // 1. Find the matrices group — try exact match first, then common variants
   const matricesKey = topLevel.find(
-    (k) => k === MATRICES_GROUP || k === `/${MATRICES_GROUP}` || k.toLowerCase() === 'matrices'
+    (k) => k === MATRICES_GROUP ||
+           k.toLowerCase() === 'matrices' ||
+           k.toLowerCase() === 'data'
   )
   if (!matricesKey) {
     throw new OMXValidationError(
@@ -247,12 +249,15 @@ export function extractLookups(h5File: {
 }): Record<string, string[]> {
   const lookups: Record<string, string[]> = {}
 
-  if (!h5File.keys().includes(LOOKUP_GROUP)) {
+  const lookupKey = h5File.keys().find(
+    (k: string) => k === LOOKUP_GROUP || k.toLowerCase() === 'lookup'
+  )
+  if (!lookupKey) {
     logger.debug('omxParser: No /lookup/ group found — zone labels unavailable')
     return lookups
   }
 
-  const lookupGroup = h5File.get(LOOKUP_GROUP)
+  const lookupGroup = h5File.get(lookupKey)
   if (!lookupGroup) return lookups
 
   for (const key of lookupGroup.keys()) {

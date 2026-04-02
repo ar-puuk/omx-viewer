@@ -110,16 +110,16 @@ export const SUMMARY_PANEL_HEIGHT_PX = 320
 // ---------------------------------------------------------------------------
 
 /** HDF5 group path where matrix datasets live. */
-export const MATRICES_GROUP = 'matrices'
+export const MATRICES_GROUP = 'data'  // OMX files use 'data' not 'matrices' per actual spec
 
 /** HDF5 group path where lookup tables live. */
 export const LOOKUP_GROUP = 'lookup'
 
 /** Root-level HDF5 attribute containing the OMX version string. */
-export const OMX_VERSION_ATTR = 'omx_version'
+export const OMX_VERSION_ATTR = 'OMX_VERSION'  // uppercase in actual OMX files
 
 /** Root-level HDF5 attribute containing the matrix shape as an int array. */
-export const OMX_SHAPE_ATTR = 'shape'
+export const OMX_SHAPE_ATTR = 'SHAPE'  // uppercase in actual OMX files
 
 // ---------------------------------------------------------------------------
 // File Validation
