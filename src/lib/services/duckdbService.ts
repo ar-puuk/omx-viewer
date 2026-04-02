@@ -21,7 +21,7 @@ import {
 import { matrixToArrowIPCBatches, arrowIPCToRows } from '../utils/arrowUtils.js'
 import { sliceFullMatrix } from './h5wasmService.js'
 import { logger } from '../utils/logger.js'
-import * as store from '../state/matrixStore.svelte.js'
+import { store } from '../state/matrixStore.svelte.js'
 
 // ---------------------------------------------------------------------------
 // Worker Lifecycle
@@ -80,7 +80,7 @@ export async function initDuckDBWorker(): Promise<void> {
       if (type === 'duckdb:init:ok') {
         clearTimeout(timer)
         workerReady = true
-        store.duckdbReady = true
+        store.duckdbReady = true  // valid: store is a class instance, not an import binding
         logger.log('duckdbService: DuckDB worker ready')
         resolve()
         return

@@ -1,27 +1,15 @@
 <script lang="ts">
-  // Component: GridCell — Individual matrix cell with value color coding and click handler.
-
+  // Component: GridCell — Individual matrix cell with value color coding.
   import { formatNumber, getValueClass } from '../../utils/formatNumber.js'
-  import { decimalPlaces, compactNotation, pinnedCell } from '../../state/matrixStore.svelte.js'
+  import { store } from '../../state/matrixStore.svelte.js'
 
-  interface Props {
-    value: number
-    row: number
-    col: number
-    width: number
-    onclick: (row: number, col: number) => void
-  }
-
+  interface Props { value: number; row: number; col: number; width: number; onclick: (row: number, col: number) => void }
   const { value, row, col, width, onclick }: Props = $props()
 
-  const formatted = $derived(formatNumber(value, decimalPlaces, compactNotation))
+  const formatted = $derived(formatNumber(value, store.decimalPlaces, store.compactNotation))
   const valueClass = $derived(getValueClass(value))
-  const isPinned = $derived(
-    pinnedCell !== null && pinnedCell.row === row && pinnedCell.col === col
-  )
-  const isPinnedCol = $derived(
-    pinnedCell !== null && !isPinned && pinnedCell.col === col
-  )
+  const isPinned = $derived(store.pinnedCell !== null && store.pinnedCell.row === row && store.pinnedCell.col === col)
+  const isPinnedCol = $derived(store.pinnedCell !== null && !isPinned && store.pinnedCell.col === col)
 </script>
 
 <div

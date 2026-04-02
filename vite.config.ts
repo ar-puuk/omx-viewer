@@ -30,11 +30,14 @@ export default defineConfig({
     // Increase chunk size warning limit — DuckDB-Wasm is intentionally large
     chunkSizeWarningLimit: 5000,
     rollupOptions: {
+      // Treat the coi-serviceworker as external — it's a pre-built script served statically
+      external: [/coi-serviceworker/],
       output: {
         // Split DuckDB into its own chunk to keep the main bundle lean
-        manualChunks: {
-          duckdb: ['@duckdb/duckdb-wasm'],
-          arrow: ['apache-arrow']
+        // manualChunks must be a function in Vite 8 / Rolldown
+        manualChunks: (id: string) => {
+          if (id.includes('@duckdb/duckdb-wasm')) return 'duckdb'
+          if (id.includes('apache-arrow')) return 'arrow'
         }
       }
     }

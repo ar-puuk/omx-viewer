@@ -9,8 +9,9 @@
       It installs a Service Worker that adds COOP/COEP headers client-side,
       enabling SharedArrayBuffer and Wasm features on GitHub Pages where
       custom HTTP response headers cannot be configured.
+      Note: plain script (not module) so it runs synchronously before anything else.
     -->
-    <script src="/omx-viewer/coi-serviceworker.js"></script>
+    <script src="/omx-viewer/coi-serviceworker.js" crossorigin="anonymous"></script>
 
     <title>OMX Viewer — Browser-native HDF5 matrix explorer</title>
     <meta

@@ -1,7 +1,5 @@
 <script lang="ts">
   // Component: ViewerLayout — Master layout after a file is loaded.
-  // Composes: header bar, tab bar, toolbar, virtual grid, sidebar, summary panel, modals.
-
   import MatrixTabBar from './MatrixTabBar.svelte'
   import GridToolbar from './GridToolbar.svelte'
   import VirtualGrid from './VirtualGrid.svelte'
@@ -9,29 +7,21 @@
   import SummaryPanel from '../modals/SummaryPanel.svelte'
   import ArithmeticModal from '../modals/ArithmeticModal.svelte'
   import ThemeToggle from '../shared/ThemeToggle.svelte'
-
-  import { file, hasFile, resetState } from '../../state/matrixStore.svelte.js'
+  import { store } from '../../state/matrixStore.svelte.js'
   import { closeCurrentFile } from '../../services/h5wasmService.js'
 
   let scrollToCell = $state<((row: number, col: number) => void) | undefined>(undefined)
   let showArithmeticModal = $state(false)
 
-  function handleNavigate(row: number, col: number) {
-    scrollToCell?.(row, col)
-  }
+  function handleNavigate(row: number, col: number) { scrollToCell?.(row, col) }
 
-  function handleNewFile() {
-    closeCurrentFile()
-    resetState()
-  }
+  function handleNewFile() { closeCurrentFile(); store.resetState() }
 </script>
 
 <div class="viewer-root">
-
-  <!-- ── Header Bar ──────────────────────────────────────────────────────── -->
+  <!-- Header Bar -->
   <header class="app-header">
     <div class="header-left">
-      <!-- Logo mark -->
       <div class="logo-mark" aria-hidden="true">
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
           <rect x="1" y="1" width="9" height="9" rx="1.5" stroke="var(--color-accent)" stroke-width="1.5"/>
@@ -41,16 +31,12 @@
         </svg>
       </div>
       <span class="app-name">OMX Viewer</span>
-
-      {#if file}
+      {#if store.file}
         <div class="divider-v" aria-hidden="true"></div>
-        <span class="filename truncate" title={file.filename}>{file.filename}</span>
-        <span class="shape-badge badge">
-          {file.shape[0].toLocaleString()}×{file.shape[1].toLocaleString()}
-        </span>
+        <span class="filename truncate" title={store.file.filename}>{store.file.filename}</span>
+        <span class="shape-badge badge">{store.file.shape[0].toLocaleString()}×{store.file.shape[1].toLocaleString()}</span>
       {/if}
     </div>
-
     <div class="header-right">
       <button class="btn btn-ghost new-file-btn" onclick={handleNewFile} title="Open a different file">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
@@ -62,22 +48,15 @@
     </div>
   </header>
 
-  <!-- ── Tab Bar ─────────────────────────────────────────────────────────── -->
+  <!-- Tab Bar -->
   <MatrixTabBar />
 
-  <!-- ── Main content area: toolbar + grid + sidebar ────────────────────── -->
+  <!-- Main content -->
   <div class="main-area">
     <div class="grid-column">
-
-      <!-- Toolbar -->
-      <GridToolbar
-        onnavigate={handleNavigate}
-        onopenarithmetic={() => { showArithmeticModal = true }}
-      />
-
-      <!-- Virtual Grid -->
+      <GridToolbar onnavigate={handleNavigate} onopenarithmetic={() => { showArithmeticModal = true }} />
       <div class="grid-wrapper" style="flex: 1; overflow: hidden;">
-        {#if hasFile}
+        {#if store.hasFile}
           <VirtualGrid bind:scrollToCell />
         {:else}
           <div class="grid-empty-state">
@@ -89,105 +68,26 @@
           </div>
         {/if}
       </div>
-
-      <!-- Summary Panel (bottom drawer) -->
       <SummaryPanel />
     </div>
-
-    <!-- Sidebar -->
     <MetadataPanel />
   </div>
 
-  <!-- ── Arithmetic Modal ─────────────────────────────────────────────────── -->
   {#if showArithmeticModal}
     <ArithmeticModal onclose={() => { showArithmeticModal = false }} />
   {/if}
 </div>
 
 <style>
-  .viewer-root {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
-    background: var(--color-bg-base);
-  }
-
-  /* Header */
-  .app-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: var(--header-height);
-    padding: 0 var(--space-8);
-    background: var(--color-header-bg);
-    border-bottom: 1px solid var(--color-border-strong);
-    flex-shrink: 0;
-    gap: var(--space-8);
-    z-index: var(--z-sticky);
-  }
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: var(--space-6);
-    min-width: 0;
-    flex: 1;
-  }
-
-  .logo-mark {
-    flex-shrink: 0;
-  }
-
-  .app-name {
-    font-family: var(--font-mono);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-secondary);
-    letter-spacing: var(--letter-spacing-widest);
-    text-transform: uppercase;
-    flex-shrink: 0;
-  }
-
-  .filename {
-    font-family: var(--font-mono);
-    font-size: var(--font-size-sm);
-    color: var(--color-text-primary);
-    max-width: 300px;
-  }
-
-  .shape-badge {
-    flex-shrink: 0;
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    flex-shrink: 0;
-  }
-
-  .new-file-btn {
-    font-size: var(--font-size-xs);
-    height: 28px;
-    gap: var(--space-3);
-    padding: 0 var(--space-6);
-  }
-
-  /* Main content */
-  .main-area {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-    min-height: 0;
-  }
-
-  .grid-column {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
-    min-width: 0;
-  }
+  .viewer-root { display: flex; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; background: var(--color-bg-base); }
+  .app-header { display: flex; align-items: center; justify-content: space-between; height: var(--header-height); padding: 0 var(--space-8); background: var(--color-header-bg); border-bottom: 1px solid var(--color-border-strong); flex-shrink: 0; gap: var(--space-8); z-index: var(--z-sticky); }
+  .header-left { display: flex; align-items: center; gap: var(--space-6); min-width: 0; flex: 1; }
+  .logo-mark { flex-shrink: 0; }
+  .app-name { font-family: var(--font-mono); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-text-secondary); letter-spacing: var(--letter-spacing-widest); text-transform: uppercase; flex-shrink: 0; }
+  .filename { font-family: var(--font-mono); font-size: var(--font-size-sm); color: var(--color-text-primary); max-width: 300px; }
+  .shape-badge { flex-shrink: 0; }
+  .header-right { display: flex; align-items: center; gap: var(--space-4); flex-shrink: 0; }
+  .new-file-btn { font-size: var(--font-size-xs); height: 28px; gap: var(--space-3); padding: 0 var(--space-6); }
+  .main-area { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+  .grid-column { display: flex; flex-direction: column; flex: 1; overflow: hidden; min-width: 0; }
 </style>

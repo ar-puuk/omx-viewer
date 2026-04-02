@@ -26,11 +26,7 @@ import {
   normalizeDtype,
   OMXValidationError,
 } from './omxParser.js'
-import {
-  addChunkToCache,
-  touchCacheEntry,
-  setTabDtype,
-} from '../state/matrixStore.svelte.js'
+import { store } from '../state/matrixStore.svelte.js'
 import { logger } from '../utils/logger.js'
 
 // ---------------------------------------------------------------------------
@@ -68,8 +64,10 @@ export async function initH5Wasm(): Promise<H5Module> {
 
   logger.time('h5wasmService:init')
   // Dynamic import — keeps h5wasm out of the initial bundle
-  const h5wasmModule = await import('h5wasm/esm')
-  h5module = await h5wasmModule.default({
+  const h5wasmModule = await import('h5wasm')
+  // h5wasm default export is the init function in the main entry
+  const initFn = h5wasmModule.default ?? h5wasmModule
+  h5module = await (typeof initFn === 'function' ? initFn : initFn.default)({
     locateFile: (filename: string) => `/omx-viewer/h5wasm/${filename}`
   })
   logger.timeEnd('h5wasmService:init')
@@ -147,7 +145,7 @@ export async function openOMXFile(file: File): Promise<MatrixFile> {
       const dataset = h5file.get(`${MATRICES_GROUP}/${name}`) as H5Dataset
       const rawDtype: string = dataset.dtype ?? 'float32'
       const dtype = normalizeDtype(rawDtype)
-      setTabDtype(name, dtype)
+      store.setTabDtype(name, dtype)
 
       logger.debug(
         `h5wasmService: matrix '${name}' dtype=${dtype} ` +
@@ -240,7 +238,7 @@ export function sliceMatrixRows(
 
   // Cache hit — return immediately
   if (cachedRows.has(chunkStart)) {
-    touchCacheEntry(tabId, chunkStart)
+    store.touchCacheEntry(tabId, chunkStart)
     const cached = cachedRows.get(chunkStart)!
     return extractRowsFromChunk(cached, rowStart - chunkStart, rowEnd - chunkStart, ncols)
   }
@@ -266,7 +264,7 @@ export function sliceMatrixRows(
   logger.timeEnd(`h5wasmService:slice:${matrixName}[${chunkStart}]`)
 
   // Store in LRU cache
-  addChunkToCache(tabId, chunkStart, chunk, MAX_CACHED_CHUNKS)
+  store.addChunkToCache(tabId, chunkStart, chunk, MAX_CACHED_CHUNKS)
 
   return extractRowsFromChunk(chunk, rowStart - chunkStart, rowEnd - chunkStart, ncols)
 }
