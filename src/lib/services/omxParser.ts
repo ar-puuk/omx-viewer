@@ -81,28 +81,49 @@ export function validateOMXStructure(h5File: {
   get(path: string): { keys(): string[] } | null
   attrs: Record<string, { value: RawAttr }>
 }): void {
-  // 1. Check /matrices/ group exists
+  // Diagnostic: log top-level keys and attrs so we can see the real structure
   const topLevel = h5File.keys()
-  if (!topLevel.includes(MATRICES_GROUP)) {
+  // eslint-disable-next-line no-console
+  console.log('[omxParser] top-level keys:', topLevel)
+  // eslint-disable-next-line no-console
+  console.log('[omxParser] root attrs:', Object.keys(h5File.attrs))
+
+  // 1. Check /matrices/ group exists — try both 'matrices' and '/matrices'
+  const matricesKey = topLevel.find(
+    (k) => k === MATRICES_GROUP || k === `/${MATRICES_GROUP}` || k.toLowerCase() === 'matrices'
+  )
+  if (!matricesKey) {
     throw new OMXValidationError(
       'No matrices found. This may not be an OMX file.'
     )
   }
 
   // 2. Check /matrices/ has at least one dataset
-  const matricesGroup = h5File.get(MATRICES_GROUP)
-  if (!matricesGroup || matricesGroup.keys().length === 0) {
+  const matricesGroup = h5File.get(matricesKey)
+  // eslint-disable-next-line no-console
+  console.log('[omxParser] matrices group:', matricesGroup)
+  if (!matricesGroup) {
+    throw new OMXValidationError(
+      'The /matrices/ group could not be opened.'
+    )
+  }
+  const matricesKeys = matricesGroup.keys()
+  // eslint-disable-next-line no-console
+  console.log('[omxParser] matrix names:', matricesKeys)
+  if (matricesKeys.length === 0) {
     throw new OMXValidationError(
       'The /matrices/ group is empty — no matrix datasets found.'
     )
   }
 
-  // 3. Check 'shape' root attribute exists
+  // 3. Check 'shape' root attribute — it may be optional in some OMX files
   const shapeAttr = h5File.attrs[OMX_SHAPE_ATTR]
+  // eslint-disable-next-line no-console
+  console.log('[omxParser] shape attr:', shapeAttr, shapeAttr?.value)
   if (!shapeAttr) {
-    throw new OMXValidationError(
-      `Missing required root attribute '${OMX_SHAPE_ATTR}'. This may not be a valid OMX file.`
-    )
+    // Some OMX files omit the root shape attr — we will infer it from the first matrix
+    // Do not throw here; parseOMXFile will handle this case
+    return
   }
 
   // 4. Validate shape is a 2-element array of positive integers
@@ -305,19 +326,33 @@ export function parseOMXFile(h5File: any, filename: string): MatrixFile {
   // Step 1: Validate structure
   validateOMXStructure(h5File)
 
-  // Step 2: Extract shape
-  const shapeRaw = h5File.attrs[OMX_SHAPE_ATTR]?.value
-  const shape = normalizeShape(shapeRaw)
-  if (!shape) {
-    throw new OMXValidationError('Could not parse matrix shape from root attributes.')
-  }
-
-  // Step 3: Extract OMX version
+  // Step 2: Extract OMX version
   const omxVersion = extractOMXVersion(h5File.attrs)
 
-  // Step 4: Extract matrix names
+  // Step 3: Extract matrix names
   const matricesGroup = h5File.get(MATRICES_GROUP)
   const matrixNames = extractMatrixNames(matricesGroup)
+
+  // Step 4: Extract shape — fall back to inferring from the first matrix
+  // if the root 'shape' attribute is absent (some OMX writers omit it)
+  let shape: [number, number] | null = null
+  const shapeRaw = h5File.attrs[OMX_SHAPE_ATTR]?.value
+  if (shapeRaw !== undefined && shapeRaw !== null) {
+    shape = normalizeShape(shapeRaw)
+  }
+  if (!shape) {
+    try {
+      const firstMatrix = h5File.get(`${MATRICES_GROUP}/${matrixNames[0]}`)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ds = firstMatrix as any
+      if (ds?.shape && Array.isArray(ds.shape) && ds.shape.length >= 2) {
+        shape = [Number(ds.shape[0]), Number(ds.shape[1])]
+      }
+    } catch { /* ignore */ }
+  }
+  if (!shape) {
+    throw new OMXValidationError('Could not determine matrix shape. The file may not be a valid OMX file.')
+  }
 
   if (matrixNames.length === 0) {
     throw new OMXValidationError(
