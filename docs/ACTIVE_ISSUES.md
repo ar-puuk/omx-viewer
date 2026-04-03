@@ -34,6 +34,7 @@ The following bugs have been fixed:
 - [x] Matrix tabs created per dataset
 - [x] VirtualGrid renders matrix data after file parse
 - [x] LRU chunk cache works correctly with scroll
+- [x] Scroll loads new chunks (vertical scrolling fetches new row chunks on demand)
 - [x] Summary panel aggregation (SUM/MIN/MAX/MEAN/MEDIAN/STDDEV/COUNT_NONZERO, by row/col, active/all)
 - [x] MetadataPanel stats (min/max/mean)
 
@@ -47,9 +48,10 @@ The following bugs have been fixed:
 
 | # | Bug | Fix | File |
 |---|---|---|---|
-| 12 | `scheduleRowFetch()` called inline in template — every Svelte re-render reset the 50ms debounce timer, preventing the fetch from ever firing promptly | Replaced with `$effect`-based subscription to rowVirt store + `$effect` cleanup for debounce. Fetch trigger is now decoupled from render cycle. | `VirtualGrid.svelte` |
+| 12 | `scheduleRowFetch()` called inline in template — every Svelte re-render reset the 50ms debounce timer, preventing the fetch from ever firing promptly | Replaced with `onscroll` handler on the scroll container + direct `scrollTop / ROW_HEIGHT` calculation. No Svelte store subscription chain needed. | `VirtualGrid.svelte` |
 | 13 | `Map.set()` on `tab.cachedRows` not tracked by Svelte 5 — after data fetched, `getCellValue` returned cached data but Svelte never re-rendered cells | Added `cacheVersion` counter to `AppState`; incremented on every `addChunkToCache`. `getCellValue` reads `store.cacheVersion` to create reactive dependency. | `matrixStore.svelte.ts`, `VirtualGrid.svelte` |
 | 14 | Only one chunk fetched per scroll — if visible range spanned two chunks (e.g. rows 180-210 spanning chunks 0 and 200), the second chunk was never requested | Fetch loop now iterates from `firstChunk` to `lastChunk`, loading all chunks needed by the visible range | `VirtualGrid.svelte` |
+| 18 | Scrolling didn't load new chunks — `$state` mutations from store subscription callbacks didn't reliably trigger dependent `$effect` re-runs in Svelte 5 | Replaced `rowVirt.subscribe()` → `$state` → `$effect` chain with direct `onscroll` DOM handler. Fetch now triggered by: scroll events, initial load, tab changes, and CellNavigator. | `VirtualGrid.svelte` |
 
 **Investigated but not the primary bottleneck:**
 - `file.arrayBuffer()` — loads the full file into memory, but this runs during the loading overlay (before grid shows). It's slow for very large files (~1.2 GB) but not the cause of the post-load delay. `FS.createLazyFile()` is only for HTTP-backed resources, and `WORKERFS` only works in Web Workers (h5wasm must stay on main thread per architecture rules). No fix available; this is inherent to h5wasm's Emscripten FS.

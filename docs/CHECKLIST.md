@@ -12,14 +12,14 @@ Mark items as they are confirmed working.
 ## h5wasm / File Loading
 - [x] h5wasm loaded lazily (only after file selection)
 - [x] h5wasm uses `await ready` + named exports, not a factory function
-- [ ] HDF5 native chunk shape read on open; ROW_CHUNK_SIZE aligned dynamically
-- [ ] No entire matrix ever loaded into memory at once (always use slice)
+- [x] HDF5 native chunk shape read on open; ROW_CHUNK_SIZE aligned dynamically
+- [ ] No entire matrix ever loaded into memory at once (always use slice) — `sliceFullMatrix` still used by ArithmeticModal
 
-## DuckDB Worker
-- [x] DuckDB-Wasm initialized in a Web Worker only
-- [x] Used for aggregations only (SUM/MIN/MAX/MEAN/MEDIAN/STDDEV/COUNT_NONZERO)
-- [ ] Summary SQL dynamically constructed from SummaryConfig — not hardcoded
-- [ ] "All matrices" scope produces multi-column JOIN query
+## Aggregation
+- [x] DuckDB-Wasm initialized in a Web Worker (retained for future use)
+- [x] Aggregations computed via streaming h5wasm (not DuckDB — avoids 512 MB OOM)
+- [x] All 7 functions supported: SUM/MIN/MAX/MEAN/MEDIAN/STDDEV/COUNT_NONZERO
+- [x] "All matrices" scope processes one matrix at a time, yields between matrices
 
 ## Math Worker
 - [x] `math.worker.ts` handles all element-wise arithmetic
@@ -27,17 +27,19 @@ Mark items as they are confirmed working.
 - [x] ArithmeticModal sends data to math.worker, NOT DuckDB
 
 ## Summary Panel
-- [ ] Dimension/fn/scope dropdowns + Generate button (not toggles)
-- [ ] Result rendered as standalone scrollable table, NOT appended to grid
+- [x] Dimension/fn/scope dropdowns + Generate button (not toggles)
+- [x] Result rendered as standalone scrollable table, NOT appended to grid
 - [ ] "Download CSV" generates Blob URL — no server
 
 ## Virtual Grid
-- [ ] TanStack Virtual configured for both row AND column virtualization
-- [ ] Max 30 rows in DOM simultaneously
-- [ ] Max 20 columns in DOM simultaneously
-- [ ] LRU cache max 20 chunks per matrix tab
-- [ ] 50ms trailing debounce on scroll events
-- [ ] No layout thrash — cell dimensions via CSS variables only
+- [x] TanStack Virtual configured for both row AND column virtualization
+- [x] Max 30 rows in DOM simultaneously (GRID_ROW_OVERSCAN=5)
+- [x] Max 20 columns in DOM simultaneously (GRID_COL_OVERSCAN=3)
+- [x] LRU cache max 20 chunks per matrix tab
+- [x] 50ms trailing debounce on scroll events (onscroll handler)
+- [x] No layout thrash — cell dimensions via CSS variables only
+- [x] Scroll-driven chunk fetching via onscroll + scrollTop/ROW_HEIGHT calculation
+- [x] cacheVersion counter triggers reactive re-render on chunk arrival
 
 ## Cell Navigation
 - [ ] CellNavigator validates row/col against matrix bounds

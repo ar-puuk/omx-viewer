@@ -1,96 +1,37 @@
-# Performance Investigation — Grid Loading Extremely Slow
+# Performance Investigation — Grid Loading & Scrolling
 
-## Symptom
-Matrix grid takes 1-2 minutes to display values after file load. The skeleton
-placeholders show immediately but cells never populate until a very long wait.
-File: skm_w8_0k.omx — 3,629 × 3,629 matrix, 23 matrices, float32.
+## Resolved Issues
 
-## Hypotheses (investigate all of these)
+### Issue 1: Grid takes 1-2 minutes to display values after file load
+**File:** skm_w8_0k.omx — 3,629 × 3,629 matrix, 23 matrices, float32.
 
-### 1. h5wasm reading entire file into memory before slicing
-`openOMXFile()` in `h5wasmService.ts` calls `file.arrayBuffer()` which loads
-the ENTIRE file into a Uint8Array and writes it to the Emscripten virtual FS.
-For a 300-700MB OMX file this is the biggest likely bottleneck — the browser
-must allocate and copy hundreds of MB before any matrix data can be read.
+**Root causes found and fixed:**
 
-**Investigate:** Is there a way to give h5wasm a File/Blob handle directly
-instead of loading all bytes? Check if h5wasm supports lazy file access via
-`FS.createLazyFile()` or similar Emscripten FS API.
+| # | Hypothesis | Result | Fix |
+|---|---|---|---|
+| 1 | `file.arrayBuffer()` loads entire file before h5wasm can slice | Secondary — runs during loading overlay, not the post-load delay. `FS.createLazyFile()` is HTTP-only; `WORKERFS` requires a worker. No fix available. | N/A |
+| 2 | `scheduleRowFetch()` called inline in template resets debounce every render | **Confirmed root cause.** Every Svelte re-render reset the 50ms timer, preventing the fetch from ever firing promptly. | Replaced with `onscroll` handler on the scroll container. |
+| 3 | Float64Array conversion on every chunk | Secondary — doubles memory per chunk but doesn't cause delay. | Not yet addressed (low priority). |
+| 4 | Wrong chunk alignment reading too much data | Not confirmed — `getAlignedChunkSize()` works correctly. | N/A |
+| 5 | Map mutations not reactive in Svelte 5 | **Confirmed root cause.** `tab.cachedRows.set()` is invisible to Svelte 5's proxy. Grid never re-rendered after data was fetched. | Added `cacheVersion` counter to AppState, incremented on every `addChunkToCache`. `getCellValue` reads it. |
+| 6 | scheduleRowFetch called with wrong row index | Not confirmed — was secondary to hypothesis 2. | N/A |
 
-### 2. VirtualGrid fetching on every render cycle
-`scheduleRowFetch()` is called inline in the Svelte template on every render.
-If Svelte is re-rendering frequently, this could be firing the debounce
-constantly and resetting the 50ms timer repeatedly, meaning the actual fetch
-never runs.
+### Issue 2: Scrolling doesn't load new chunks
+**Symptom:** Initial chunk loads fine, but vertical/horizontal scrolling leaves cells empty.
 
-**Investigate:** Is the debounce working correctly? Add a `console.log` inside
-the setTimeout callback to confirm it fires. Check if the $effect or template
-re-renders are thrashing the debounce.
+**Root cause:** The Svelte 5 `$effect` subscription chain (`rowVirt.subscribe()` → set `$state` → trigger fetch `$effect`) was unreliable. Setting `$state` variables from within a Svelte store subscription callback (which runs outside Svelte's reactive tracking context) did not reliably trigger dependent `$effect` re-runs.
 
-### 3. Float64Array conversion on every chunk
-In `h5wasmService.ts`, every sliced chunk is converted:
-```ts
-const chunk = raw instanceof Float64Array ? raw : new Float64Array(raw)
-```
-For a 200-row × 3,629-col chunk this allocates 200 × 3,629 × 8 = ~5.8MB and
-copies each element. For float32 data this is unnecessary — the grid can render
-Float32Array directly.
+**Fix:** Replaced the subscription chain with a direct `onscroll` DOM event handler on the scroll container. The handler debounces (50ms), then computes the visible row range directly from `scrollTop / ROW_HEIGHT` — no dependency on TanStack Virtual or Svelte store subscriptions for the fetch path. Data fetching is now triggered by:
+1. **Scroll events** — `onscroll` handler with 50ms debounce
+2. **Initial load** — called from the virtualizer creation `$effect`
+3. **Tab changes** — `$effect` watching `store.activeTabId`
+4. **CellNavigator** — called after `scrollToIndex` completes
 
-**Investigate:** Skip the Float64Array conversion. Store chunks as their native
-dtype (Float32Array for float32 matrices). Update `getCellValue()` in
-VirtualGrid to accept Float32Array | Float64Array.
+**Horizontal scrolling** was never a fetch issue — row chunks already contain all columns (`[0, ncols]`). The display problem was the same Svelte 5 reactivity issue (Map mutations + `cacheVersion`) that affected vertical scrolling.
 
-### 4. Wrong chunk alignment — reading too much data
-`sliceMatrixRows()` currently fetches `DEFAULT_ROW_CHUNK_SIZE = 200` rows per
-call. But if `getAlignedChunkSize()` is not working, it may be fetching the
-full HDF5 chunk which could be much larger.
+### Issue 3: DuckDB OOM on summary generation
+**Symptom:** `could not allocate block of size 256.0 KiB (488.1 MiB/488.2 MiB used)`
 
-**Investigate:** Log what `dataset.chunks` returns for this file. Log how many
-rows are actually being fetched per slice call.
+**Root cause:** DuckDB-Wasm has a 512 MB limit. Loading a 3,629-column matrix as a wide DuckDB table consumed ~105 MB per matrix. 23 matrices = ~2.4 GB → OOM.
 
-### 5. VirtualGrid not hitting the cache
-If `tab.cachedRows` is a Map inside a Svelte `$state` class, mutations to the
-Map may not be reactive — Svelte 5 doesn't track Map mutations automatically.
-This could mean the grid re-fetches the same chunk every render instead of
-returning the cached value.
-
-**Investigate:** Log cache hits vs misses. If every render is a cache miss,
-the cache is not working.
-
-### 6. scheduleRowFetch called with wrong row index
-The fetch is triggered with `virtualRows[0].index` — the first visible row.
-But if virtualRows includes overscan rows above the viewport, `[0].index`
-might be negative or 0 always, meaning the fetch always targets chunk 0.
-
-**Investigate:** Log `virtualRows[0].index` and `virtualRows[virtualRows.length-1].index`
-to see the actual visible range on scroll.
-
----
-
-## Investigation Instructions for Claude Code
-
-Read these files in full before doing anything:
-- `src/lib/services/h5wasmService.ts`
-- `src/lib/components/viewer/VirtualGrid.svelte`
-- `src/lib/state/matrixStore.svelte.ts`
-- `src/lib/utils/constants.ts`
-
-Then:
-
-1. Add temporary `console.time` / `console.timeEnd` and `console.log` calls to
-   measure: (a) how long the initial file load takes vs the first chunk fetch,
-   (b) whether the debounce is firing, (c) cache hit/miss ratio.
-
-2. Check if h5wasm supports `FS.createLazyFile()` for streaming access instead
-   of loading the full file. If yes, implement it.
-
-3. Fix the Float64Array conversion — store chunks in native dtype.
-
-4. Fix the debounce if it is being reset on every render cycle.
-
-5. Fix the cache if Map mutations are not reactive in Svelte 5.
-
-6. After identifying the root cause, implement the fix and remove the temporary
-   logging.
-
-Do not guess — measure first, then fix the confirmed bottleneck.
+**Fix:** Replaced DuckDB-based aggregation with streaming JS computation. Reads h5wasm row chunks (200 × 3,629 × 4 bytes ≈ 2.9 MB) and computes per-row/per-col aggregates in tight loops. Peak memory: one chunk. Also fixed `computeMatrixStats` to use h5wasm streaming directly.
