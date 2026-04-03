@@ -296,6 +296,36 @@ function extractRowsFromChunk(
 }
 
 // ---------------------------------------------------------------------------
+// 4b. Raw Chunk Slice — for streaming aggregation (no cache, native dtype)
+// ---------------------------------------------------------------------------
+
+/**
+ * Slices a row range directly from h5wasm with no cache interaction and no
+ * Float64 conversion. Returns the native TypedArray (Float32/Float64/Int32).
+ * Used by streaming aggregation to avoid the memory overhead of full-matrix
+ * reads and Arrow IPC conversion.
+ *
+ * @param matrixName - Dataset name under /data/.
+ * @param rowStart   - Inclusive start row (0-based).
+ * @param rowEnd     - Exclusive end row.
+ * @param ncols      - Number of columns in the matrix.
+ * @returns          - Native TypedArray, length = (rowEnd - rowStart) × ncols.
+ */
+export function sliceRawChunk(
+  matrixName: string,
+  rowStart: number,
+  rowEnd: number,
+  ncols: number
+): Float32Array | Float64Array | Int32Array {
+  if (!h5file) {
+    throw new Error('h5wasmService: No file is open. Call openOMXFile() first.')
+  }
+  const dataset = h5file.get(`${MATRICES_GROUP}/${matrixName}`) as H5Dataset
+  return dataset.slice([[rowStart, rowEnd], [0, ncols]]) as
+    Float32Array | Float64Array | Int32Array
+}
+
+// ---------------------------------------------------------------------------
 // 5. Full Matrix Slice — for arithmetic (sent to math.worker)
 // ---------------------------------------------------------------------------
 

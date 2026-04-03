@@ -34,6 +34,8 @@ The following bugs have been fixed:
 - [x] Matrix tabs created per dataset
 - [x] VirtualGrid renders matrix data after file parse
 - [x] LRU chunk cache works correctly with scroll
+- [x] Summary panel aggregation (SUM/MIN/MAX/MEAN/MEDIAN/STDDEV/COUNT_NONZERO, by row/col, active/all)
+- [x] MetadataPanel stats (min/max/mean)
 
 ---
 
@@ -56,14 +58,37 @@ The following bugs have been fixed:
 
 ---
 
+## Fixed: DuckDB OOM on Summary Generation
+
+**Symptom:** Clicking Generate in Summary panel with any scope produced: `Failed to insert into table 'DA': could not allocate block of size 256.0 KiB (488.1 MiB/488.2 MiB used)`.
+
+**Root cause:** The aggregation path loaded entire matrices as wide DuckDB tables (3,629 Float64 columns per table). One matrix = ~105 MB in DuckDB. For "All Matrices" scope (23 matrices), that's ~2.4 GB — far beyond DuckDB-Wasm's 512 MB limit. Even a single matrix barely fit after Arrow IPC conversion overhead (~300 MB through the pipeline).
+
+| # | Bug | Fix | File |
+|---|---|---|---|
+| 15 | `runAggregation` loaded full matrices into DuckDB via Arrow IPC — O(entire_matrix × num_matrices) memory | Replaced with streaming JS aggregation: reads h5wasm row chunks (200×3,629×4 = 2.9 MB each), computes per-row/per-col aggregates in a tight loop. Peak memory: one chunk. Processes one matrix at a time with event-loop yields for UI responsiveness. | `duckdbService.ts` |
+| 16 | `computeMatrixStats` registered full matrix in DuckDB just for MIN/MAX/MEAN | Delegates to `h5wasmService.computeBasicStats()` which already streams chunks. No DuckDB needed. | `duckdbService.ts` |
+| 17 | DuckDB worker used non-existent `read_ipc_file()` function | Replaced with `conn.insertArrowFromIPCStream()` — the correct DuckDB-Wasm API. (Fixed in prior session, retained for reference.) | `duckdb.worker.ts` |
+
+**New `sliceRawChunk` in h5wasmService.ts:** Bare h5wasm slice — no Float64 conversion, no cache interaction. Returns native TypedArray (Float32Array for float32 data). Used by streaming aggregation.
+
+**Memory comparison (23 matrices, 3,629×3,629 float32):**
+| Approach | Peak Memory |
+|---|---|
+| Old (DuckDB) | ~2.4 GB (all matrices loaded as wide Float64 tables) |
+| New (streaming) | ~3 MB per chunk + ~29 KB result per matrix (one at a time) |
+| New (MEDIAN by_col, worst case) | ~105 MB (one matrix's columns sorted in-place) |
+
+**DuckDB worker retained** for potential future use. Not invoked by aggregation or stats paths.
+
+---
+
 ## Currently Broken / Not Yet Tested
 
 - [ ] **Cell Navigator** — scroll-to-center on both row and column virtualizers.
 - [ ] **Pinned cell highlight** — ring distinguishable from hover; row/col headers highlighted.
 - [ ] **Cross-matrix cell inspector** — reads `[row, col]` from every matrix, shows in sidebar.
-- [ ] **DuckDB aggregation** — Summary panel Generate button. SQL generation for all 28 combinations.
 - [ ] **Math worker arithmetic** — ArithmeticModal compute. Transferable Float64Array flow.
-- [ ] **MetadataPanel stats** — min/max/mean via DuckDB with h5wasm fallback.
 - [ ] **CSV export** — both summary table and grid slice exports.
 - [ ] **Theme toggle** — dark/light switch persisted to sessionStorage.
 
@@ -102,9 +127,8 @@ store.openFile() // call methods
 
 ## Next Steps (priority order)
 
-1. Verify grid performance fix — values should appear within ~100ms of file load completing
-2. Test scroll performance (30fps target, 50ms debounce is now properly implemented)
-3. Test Cell Navigator scroll-to-center
-4. Test DuckDB Summary panel end-to-end
-5. Test ArithmeticModal with math.worker
-6. Test cross-matrix cell inspector
+1. Verify summary panel works for all 7 functions × 2 dimensions × 2 scopes
+2. Test Cell Navigator scroll-to-center
+3. Test ArithmeticModal with math.worker
+4. Test cross-matrix cell inspector
+5. Test CSV export

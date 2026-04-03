@@ -1,25 +1,19 @@
 /**
- * duckdbService.ts — Main-thread interface to the DuckDB Web Worker.
+ * duckdbService.ts — Aggregation service + DuckDB worker + math worker.
  *
- * Provides a promise-based API over the postMessage protocol defined in
- * duckdb.worker.ts. The worker is lazily initialised on first use.
+ * Aggregations (runAggregation, computeMatrixStats) are computed by streaming
+ * row chunks directly from h5wasm — no DuckDB or Arrow IPC needed. This avoids
+ * the O(full-matrix) memory overhead that caused OOM with wide matrices
+ * (3,629 cols × 23 matrices ≈ 2.4 GB exceeded DuckDB-Wasm's 512 MB limit).
  *
- * Responsibilities:
- *   - Spawn and initialise the DuckDB worker
- *   - Register Arrow IPC matrix batches with the worker
- *   - Execute aggregation SQL (or send a config for dynamic SQL generation)
- *   - Parse Arrow IPC results back to JS row arrays
- *   - Provide a clean API for the SummaryPanel and MetadataPanel
- *
- * NOT responsible for: element-wise arithmetic (see mathWorkerService.ts).
+ * The DuckDB worker infrastructure is retained for potential future use.
+ * Element-wise arithmetic uses math.worker.ts (Transferable Float64Arrays).
  */
 
 import {
   DUCKDB_TIMEOUT_MS,
-  DUCKDB_BATCH_ROWS,
 } from '../utils/constants.js'
-import { matrixToArrowIPCBatches, arrowIPCToRows } from '../utils/arrowUtils.js'
-import { sliceFullMatrix } from './h5wasmService.js'
+import { sliceRawChunk, getChunkSize, computeBasicStats } from './h5wasmService.js'
 import { logger } from '../utils/logger.js'
 import { store } from '../state/matrixStore.svelte.js'
 
@@ -160,62 +154,26 @@ function sendToWorker(
 }
 
 // ---------------------------------------------------------------------------
-// Matrix Registration
+// Streaming Aggregation — replaces DuckDB-based aggregation
+// ---------------------------------------------------------------------------
+//
+// DuckDB-Wasm has a hard 512 MB memory limit. A 3,629×3,629 matrix stored as
+// a wide table (3,629 Float64 columns) consumes ~105 MB in DuckDB. Loading 23
+// matrices for "All Matrices" scope requires ~2.4 GB → instant OOM.
+//
+// The fix: stream row chunks from h5wasm (200 rows × ncols × 4 bytes ≈ 2.9 MB
+// per chunk) and compute aggregations in plain JS. Peak memory is bounded to
+// one chunk regardless of how many matrices or rows exist.
 // ---------------------------------------------------------------------------
 
-/**
- * Registers a matrix with DuckDB by slicing it from h5wasm in batches and
- * sending each batch as an Arrow IPC message to the worker.
- *
- * The matrix is stored as a DuckDB table named after the matrix.
- * This is the setup step required before running any aggregation SQL.
- *
- * @param matrixName - Name of the matrix dataset (becomes the table name).
- * @param nrows      - Total number of rows.
- * @param ncols      - Total number of columns.
- */
-export async function registerMatrix(
-  matrixName: string,
-  nrows: number,
-  ncols: number
-): Promise<void> {
-  if (!workerReady) throw new Error('DuckDB worker not ready')
-
-  logger.time(`duckdbService:register:${matrixName}`)
-
-  // Slice the full matrix from h5wasm in batches
-  const fullData = sliceFullMatrix(matrixName, nrows, ncols)
-
-  let isFirst = true
-  for (const { ipc, startRow } of matrixToArrowIPCBatches(
-    fullData, nrows, ncols, 0, DUCKDB_BATCH_ROWS
-  )) {
-    logger.debug(`duckdbService: registering batch startRow=${startRow}`)
-    await sendToWorker(
-      {
-        type: 'duckdb:register_batch',
-        tableName: matrixName,
-        ipc,
-        isFirst,
-      },
-      [ipc.buffer]
-    )
-    isFirst = false
-  }
-
-  logger.timeEnd(`duckdbService:register:${matrixName}`)
-}
-
-// ---------------------------------------------------------------------------
-// Aggregation — SummaryPanel main entry point
-// ---------------------------------------------------------------------------
+type AggFn = 'sum' | 'min' | 'max' | 'mean' | 'median' | 'stddev' | 'count_nonzero'
 
 /**
  * Aggregation configuration for the summary query.
  */
 export interface AggregationConfig {
   dimension: 'by_row' | 'by_col'
-  fn: 'sum' | 'min' | 'max' | 'mean' | 'median' | 'stddev' | 'count_nonzero'
+  fn: AggFn
   scope: 'active' | 'all_matrices'
   activeMatrix: string
   allMatrixNames: string[]
@@ -223,114 +181,280 @@ export interface AggregationConfig {
   ncols: number
 }
 
+// ---------------------------------------------------------------------------
+// Per-row aggregation: one output value per row
+// ---------------------------------------------------------------------------
+
 /**
- * Runs an aggregation query against the registered DuckDB tables.
- *
- * Steps:
- *   1. Determine which matrices are in scope
- *   2. Register each scoped matrix with DuckDB (slicing from h5wasm)
- *   3. Send a config object to the worker for dynamic SQL construction
- *   4. Parse the Arrow IPC result back to columnNames + rows
- *
- * @param config - Aggregation configuration.
- * @returns      - { columnNames, rows }
+ * Computes the aggregate of a single row's values (ncols elements starting at
+ * offset in a flat TypedArray).
  */
-export async function runAggregation(config: AggregationConfig): Promise<{
-  columnNames: string[]
-  rows: Array<Array<number | string>>
-}> {
-  await initDuckDBWorker()
-
-  const matrixNames = config.scope === 'active'
-    ? [config.activeMatrix]
-    : config.allMatrixNames.filter((n) => {
-        // Only include file-backed (non-ephemeral) matrices
-        return store.tabs.find((t) => t.id === n && !t.isEphemeral)
-      })
-
-  // Register all scoped matrices
-  for (const name of matrixNames) {
-    await registerMatrix(name, config.nrows, config.ncols)
+function computeRowAgg(
+  data: ArrayLike<number>,
+  offset: number,
+  ncols: number,
+  fn: AggFn
+): number {
+  switch (fn) {
+    case 'sum': {
+      let s = 0
+      for (let i = 0; i < ncols; i++) s += data[offset + i]
+      return s
+    }
+    case 'min': {
+      let m = Infinity
+      for (let i = 0; i < ncols; i++) { const v = data[offset + i]; if (v < m) m = v }
+      return m === Infinity ? NaN : m
+    }
+    case 'max': {
+      let m = -Infinity
+      for (let i = 0; i < ncols; i++) { const v = data[offset + i]; if (v > m) m = v }
+      return m === -Infinity ? NaN : m
+    }
+    case 'mean': {
+      let s = 0
+      for (let i = 0; i < ncols; i++) s += data[offset + i]
+      return s / ncols
+    }
+    case 'median': {
+      const vals = new Float64Array(ncols)
+      for (let i = 0; i < ncols; i++) vals[i] = data[offset + i]
+      vals.sort()
+      return ncols % 2 === 1
+        ? vals[(ncols - 1) / 2]
+        : (vals[ncols / 2 - 1] + vals[ncols / 2]) / 2
+    }
+    case 'stddev': {
+      let s = 0, s2 = 0
+      for (let i = 0; i < ncols; i++) { const v = data[offset + i]; s += v; s2 += v * v }
+      const mean = s / ncols
+      return Math.sqrt(Math.max(0, s2 / ncols - mean * mean))
+    }
+    case 'count_nonzero': {
+      let c = 0
+      for (let i = 0; i < ncols; i++) { if (data[offset + i] !== 0) c++ }
+      return c
+    }
   }
+}
 
-  // Send config to worker for dynamic SQL construction
-  const workerConfig = {
-    dimension: config.dimension,
-    fn: config.fn,
-    scope: config.scope,
-    matrixNames,
-    ncols: config.ncols,
-  }
+/**
+ * Streams all rows of a matrix from h5wasm in chunks and computes a per-row
+ * aggregate. Memory: O(chunkSize × ncols) — one chunk at a time.
+ */
+function streamingRowAgg(
+  matrixName: string,
+  nrows: number,
+  ncols: number,
+  fn: AggFn
+): Float64Array {
+  const result = new Float64Array(nrows)
+  const chunkSize = getChunkSize(matrixName)
 
-  const response = await sendToWorker({
-    type: 'duckdb:query',
-    config: workerConfig,
-  }) as { ipc?: Uint8Array }
+  for (let row = 0; row < nrows; row += chunkSize) {
+    const end = Math.min(row + chunkSize, nrows)
+    const raw = sliceRawChunk(matrixName, row, end, ncols)
+    const chunkRows = end - row
 
-  if (!response.ipc) {
-    throw new Error('DuckDB worker returned no IPC buffer')
-  }
-
-  const result = arrowIPCToRows(response.ipc)
-
-  // Drop registered tables to free DuckDB memory
-  for (const name of matrixNames) {
-    worker?.postMessage({ type: 'duckdb:drop_table', tableName: name })
+    for (let r = 0; r < chunkRows; r++) {
+      result[row + r] = computeRowAgg(raw, r * ncols, ncols, fn)
+    }
   }
 
   return result
 }
 
 // ---------------------------------------------------------------------------
-// Metadata Stats Query
+// Per-column aggregation: one output value per column
 // ---------------------------------------------------------------------------
 
 /**
- * Computes MIN, MAX, and MEAN for a single matrix using DuckDB.
- * Used by MetadataPanel for the stats display.
+ * Streams all rows of a matrix and computes a per-column aggregate using
+ * running accumulators. Memory: O(ncols) for accumulators + O(chunk) for data.
  *
- * @param matrixName - Matrix to compute stats for.
- * @param nrows      - Total rows.
- * @param ncols      - Total columns.
- * @returns          - { min, max, mean }
+ * For MEDIAN (which requires all values), falls back to collecting full columns
+ * one chunk at a time: O(nrows × ncols) temporary storage, but still processes
+ * only one matrix at a time.
+ */
+function streamingColAgg(
+  matrixName: string,
+  nrows: number,
+  ncols: number,
+  fn: AggFn
+): Float64Array {
+  const chunkSize = getChunkSize(matrixName)
+
+  if (fn === 'median') {
+    return streamingColMedian(matrixName, nrows, ncols, chunkSize)
+  }
+
+  // Running accumulators for all other functions
+  const result = new Float64Array(ncols)
+  const sumSq = fn === 'stddev' ? new Float64Array(ncols) : null
+
+  // Initialise min/max sentinels
+  if (fn === 'min') result.fill(Infinity)
+  else if (fn === 'max') result.fill(-Infinity)
+
+  for (let row = 0; row < nrows; row += chunkSize) {
+    const end = Math.min(row + chunkSize, nrows)
+    const raw = sliceRawChunk(matrixName, row, end, ncols)
+    const chunkRows = end - row
+
+    for (let r = 0; r < chunkRows; r++) {
+      const off = r * ncols
+      for (let c = 0; c < ncols; c++) {
+        const v = raw[off + c]
+        switch (fn) {
+          case 'sum':
+          case 'mean':
+            result[c] += v
+            break
+          case 'min':
+            if (v < result[c]) result[c] = v
+            break
+          case 'max':
+            if (v > result[c]) result[c] = v
+            break
+          case 'stddev':
+            result[c] += v
+            sumSq![c] += v * v
+            break
+          case 'count_nonzero':
+            if (v !== 0) result[c]++
+            break
+        }
+      }
+    }
+  }
+
+  // Finalise
+  if (fn === 'mean') {
+    for (let c = 0; c < ncols; c++) result[c] /= nrows
+  } else if (fn === 'stddev') {
+    for (let c = 0; c < ncols; c++) {
+      const mean = result[c] / nrows
+      result[c] = Math.sqrt(Math.max(0, sumSq![c] / nrows - mean * mean))
+    }
+  } else if (fn === 'min') {
+    for (let c = 0; c < ncols; c++) { if (result[c] === Infinity) result[c] = NaN }
+  } else if (fn === 'max') {
+    for (let c = 0; c < ncols; c++) { if (result[c] === -Infinity) result[c] = NaN }
+  }
+
+  return result
+}
+
+/**
+ * Collects all column values into a contiguous buffer, then sorts each column
+ * to find the median. Memory: O(nrows × ncols) for one matrix at a time.
+ */
+function streamingColMedian(
+  matrixName: string,
+  nrows: number,
+  ncols: number,
+  chunkSize: number
+): Float64Array {
+  // allVals layout: column 0 occupies indices [0, nrows), column 1 [nrows, 2*nrows), etc.
+  const allVals = new Float64Array(ncols * nrows)
+
+  for (let row = 0; row < nrows; row += chunkSize) {
+    const end = Math.min(row + chunkSize, nrows)
+    const raw = sliceRawChunk(matrixName, row, end, ncols)
+    const chunkRows = end - row
+
+    for (let r = 0; r < chunkRows; r++) {
+      const absRow = row + r
+      const off = r * ncols
+      for (let c = 0; c < ncols; c++) {
+        allVals[c * nrows + absRow] = raw[off + c]
+      }
+    }
+  }
+
+  const result = new Float64Array(ncols)
+  for (let c = 0; c < ncols; c++) {
+    const colSlice = allVals.subarray(c * nrows, (c + 1) * nrows)
+    colSlice.sort()
+    result[c] = nrows % 2 === 1
+      ? colSlice[(nrows - 1) / 2]
+      : (colSlice[nrows / 2 - 1] + colSlice[nrows / 2]) / 2
+  }
+
+  return result
+}
+
+// ---------------------------------------------------------------------------
+// Aggregation — SummaryPanel main entry point
+// ---------------------------------------------------------------------------
+
+/**
+ * Runs a streaming aggregation by reading h5wasm row chunks directly.
+ * Processes one matrix at a time — peak memory is one chunk (~2.9 MB for
+ * 200 rows × 3,629 cols × 4 bytes) plus the result arrays.
+ *
+ * Yields to the event loop between matrices to keep the UI responsive.
+ *
+ * @param config - Aggregation configuration from SummaryPanel.
+ * @returns      - { columnNames, rows } matching the SummaryResult interface.
+ */
+export async function runAggregation(config: AggregationConfig): Promise<{
+  columnNames: string[]
+  rows: Array<Array<number | string>>
+}> {
+  const { dimension, fn, nrows, ncols } = config
+
+  const matrixNames = config.scope === 'active'
+    ? [config.activeMatrix]
+    : config.allMatrixNames.filter((n) =>
+        store.tabs.find((t) => t.id === n && !t.isEphemeral)
+      )
+
+  logger.time('runAggregation:streaming')
+
+  const aggFn = dimension === 'by_row' ? streamingRowAgg : streamingColAgg
+  const resultLength = dimension === 'by_row' ? nrows : ncols
+
+  // Aggregate each matrix, yielding between matrices for UI responsiveness
+  const perMatrix: Record<string, Float64Array> = {}
+  for (const name of matrixNames) {
+    perMatrix[name] = aggFn(name, nrows, ncols, fn)
+    // Yield to event loop so the loading spinner stays animated
+    await new Promise((r) => setTimeout(r, 0))
+  }
+
+  // Build result table
+  const useValueLabel = matrixNames.length === 1
+  const columnNames = ['idx', ...(useValueLabel ? ['value'] : matrixNames)]
+  const rows: Array<Array<number | string>> = []
+  for (let i = 0; i < resultLength; i++) {
+    const row: Array<number | string> = [i]
+    for (const name of matrixNames) {
+      row.push(perMatrix[name][i])
+    }
+    rows.push(row)
+  }
+
+  logger.timeEnd('runAggregation:streaming')
+  return { columnNames, rows }
+}
+
+// ---------------------------------------------------------------------------
+// Metadata Stats — streaming h5wasm (no DuckDB)
+// ---------------------------------------------------------------------------
+
+/**
+ * Computes MIN, MAX, and MEAN for a single matrix by streaming from h5wasm.
+ * Delegates to h5wasmService.computeBasicStats() which already implements
+ * chunked iteration. Returns a resolved promise for API compatibility with
+ * the async signature expected by MetadataPanel.
  */
 export async function computeMatrixStats(
   matrixName: string,
   nrows: number,
   ncols: number
 ): Promise<{ min: number; max: number; mean: number }> {
-  await initDuckDBWorker()
-  await registerMatrix(matrixName, nrows, ncols)
-
-  // Build a query that finds global min, max, mean across all columns
-  const colExprs = Array.from({ length: ncols }, (_, i) => `c${i}`)
-  const minExpr  = colExprs.map((c) => `MIN("${matrixName}".${c})`).join(', ')
-  const maxExpr  = colExprs.map((c) => `MAX("${matrixName}".${c})`).join(', ')
-  const sumExpr  = colExprs.map((c) => `SUM("${matrixName}".${c})`).join(' + ')
-
-  const sql = `
-    SELECT
-      LEAST(${minExpr}) AS "min",
-      GREATEST(${maxExpr}) AS "max",
-      (${sumExpr}) / (${nrows} * ${ncols}) AS "mean"
-    FROM "${matrixName}"
-  `.trim()
-
-  const response = await sendToWorker({ type: 'duckdb:query', sql }) as { ipc?: Uint8Array }
-
-  worker?.postMessage({ type: 'duckdb:drop_table', tableName: matrixName })
-
-  if (!response.ipc) return { min: NaN, max: NaN, mean: NaN }
-
-  const { rows } = arrowIPCToRows(response.ipc)
-  if (rows.length === 0) return { min: NaN, max: NaN, mean: NaN }
-
-  const row = rows[0]
-  return {
-    min:  typeof row[0] === 'number' ? row[0] : NaN,
-    max:  typeof row[1] === 'number' ? row[1] : NaN,
-    mean: typeof row[2] === 'number' ? row[2] : NaN,
-  }
+  return computeBasicStats(matrixName, nrows, ncols)
 }
 
 // ---------------------------------------------------------------------------
