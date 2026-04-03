@@ -50,8 +50,11 @@
       horizontal: true,
     })
 
-    // Fetch initial visible chunks once virtualizers are ready
-    fetchVisibleChunks()
+    // Fetch initial visible chunks once virtualizers are ready.
+    // setTimeout escapes the $effect reactive tracking context —
+    // fetchVisibleChunks reads store.activeTab (reactive), which would
+    // create an infinite loop if called synchronously inside $effect.
+    setTimeout(fetchVisibleChunks, 0)
   })
 
   // ---------------------------------------------------------------------------
@@ -109,7 +112,7 @@
   $effect(() => {
     void store.activeTabId
     if (scrollContainer && store.nrows > 0) {
-      fetchVisibleChunks()
+      setTimeout(fetchVisibleChunks, 0)
     }
   })
 
