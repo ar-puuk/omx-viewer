@@ -51,6 +51,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Light theme: switch antialiasing so text doesn't look too thin */
+:root[data-theme='light'] body {
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+}
+
 /* Remove default list styles when list items have explicit roles */
 ul[role='list'],
 ol[role='list'] {
@@ -112,8 +118,8 @@ a:hover {
 
 :root {
   /* Font families */
-  --font-mono: 'IBM Plex Mono', 'Fira Code', 'Cascadia Code', monospace;
-  --font-sans: 'IBM Plex Sans', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Geist Mono', 'IBM Plex Mono', 'Fira Code', monospace;
+  --font-sans: 'Inter', 'Helvetica Neue', Arial, sans-serif;
 
   /* Font size scale */
   --font-size-xs:   11px;
@@ -168,10 +174,10 @@ a:hover {
    -------------------------------------------------------------------------- */
 
 :root {
-  --radius-sm:   3px;
-  --radius-md:   5px;
-  --radius-lg:   8px;
-  --radius-xl:   12px;
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   10px;
+  --radius-xl:   14px;
   --radius-full: 9999px;
 }
 
@@ -182,9 +188,10 @@ a:hover {
 :root {
   --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md:  0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-lg:  0 4px 20px rgba(0, 0, 0, 0.5);
-  --shadow-xl:  0 8px 40px rgba(0, 0, 0, 0.6);
-  --shadow-glow-accent: 0 0 16px rgba(79, 142, 247, 0.3);
+  --shadow-lg:  0 4px 24px rgba(0, 0, 0, 0.45);
+  --shadow-xl:  0 8px 48px rgba(0, 0, 0, 0.5);
+  --shadow-glow-accent: 0 0 16px rgba(59, 130, 246, 0.3);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 /* --------------------------------------------------------------------------
@@ -221,9 +228,9 @@ a:hover {
    -------------------------------------------------------------------------- */
 
 :root {
-  --transition-fast:   80ms ease;
-  --transition-normal: 150ms ease;
-  --transition-slow:   250ms ease;
+  --transition-fast:   100ms ease-out;
+  --transition-normal: 160ms ease-out;
+  --transition-slow:   250ms ease-out;
   --transition-spring: 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -298,8 +305,8 @@ a:hover {
 
 /* Custom scrollbar for webkit browsers */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -309,10 +316,14 @@ a:hover {
 ::-webkit-scrollbar-thumb {
   background: var(--color-border-strong);
   border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-muted);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-corner {
@@ -341,6 +352,7 @@ a:hover {
 input[type='number'],
 input[type='text'],
 select {
+  height: 32px;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -348,7 +360,8 @@ select {
   padding: var(--space-2) var(--space-4);
   font-size: var(--font-size-sm);
   font-family: var(--font-mono);
-  transition: border-color var(--transition-fast);
+  box-shadow: var(--shadow-inset);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 input[type='number']:hover,
@@ -362,7 +375,7 @@ input[type='text']:focus,
 select:focus {
   border-color: var(--color-accent);
   outline: none;
-  box-shadow: 0 0 0 2px var(--color-accent-subtle);
+  box-shadow: 0 0 0 3px var(--color-accent-subtle), var(--shadow-inset);
 }
 
 /* Remove number input spinners */
@@ -384,11 +397,13 @@ input[type='number'] {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-6);
+  height: 32px;
+  padding: var(--space-2) var(--space-8);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   font-family: var(--font-sans);
+  letter-spacing: 0.01em;
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast),
@@ -409,22 +424,24 @@ input[type='number'] {
   background: var(--color-accent);
   color: var(--color-text-inverse);
   border: 1px solid transparent;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .btn-primary:hover:not(:disabled) {
   background: var(--color-accent-hover);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .btn-ghost {
   background: transparent;
   color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
+  border: 1px solid transparent;
 }
 
 .btn-ghost:hover:not(:disabled) {
   background: var(--color-bg-elevated);
   color: var(--color-text-primary);
-  border-color: var(--color-border-strong);
+  border-color: var(--color-border);
 }
 
 .btn-danger {
@@ -434,7 +451,7 @@ input[type='number'] {
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: rgba(245, 101, 101, 0.1);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 /* Icon-only button */

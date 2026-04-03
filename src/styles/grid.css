@@ -157,7 +157,7 @@
 
 /* Highlighted row — matches the pinned cell's row */
 .grid-row.is-pinned-row {
-  background: rgba(79, 142, 247, 0.04);
+  background: rgba(59, 130, 246, 0.04);
 }
 
 /* --------------------------------------------------------------------------
@@ -254,7 +254,7 @@
 
 /* Column-highlight when the cell's column matches the pinned column */
 .grid-cell.is-pinned-col {
-  background: rgba(79, 142, 247, 0.04);
+  background: rgba(59, 130, 246, 0.04);
 }
 
 /* Loading / skeleton state for cells not yet fetched */

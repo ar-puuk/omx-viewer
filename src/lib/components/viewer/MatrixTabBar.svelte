@@ -13,7 +13,7 @@
 </div>
 
 <style>
-  .tabbar { display: flex; align-items: stretch; height: var(--tabbar-height); background: var(--color-bg-surface); border-bottom: 1px solid var(--color-border); flex-shrink: 0; }
+  .tabbar { display: flex; align-items: stretch; height: var(--tabbar-height); background: var(--color-bg-surface); border-bottom: none; box-shadow: 0 1px 0 var(--color-border); flex-shrink: 0; }
   .tabbar-scroll { display: flex; align-items: stretch; flex: 1; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
   .tabbar-scroll::-webkit-scrollbar { display: none; }
 </style>

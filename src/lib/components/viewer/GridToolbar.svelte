@@ -67,12 +67,12 @@
   .toolbar-group { display: flex; align-items: center; gap: var(--space-4); }
   .group-label { font-size: var(--font-size-xs); color: var(--color-text-muted); font-family: var(--font-mono); letter-spacing: var(--letter-spacing-wide); white-space: nowrap; }
   .decimal-pills { display: flex; gap: var(--space-1); }
-  .pill { width: 28px; height: 22px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: var(--font-size-xs); border-radius: var(--radius-sm); color: var(--color-text-muted); background: transparent; border: 1px solid var(--color-border); cursor: pointer; transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast); }
-  .pill:hover { background: var(--color-bg-elevated); color: var(--color-text-primary); }
+  .pill { width: 28px; height: 22px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: var(--font-size-xs); border-radius: var(--radius-sm); color: var(--color-text-muted); background: transparent; border: 1px solid transparent; cursor: pointer; transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast); }
+  .pill:hover { background: var(--color-bg-overlay); color: var(--color-text-primary); border-color: var(--color-border); }
   .pill.is-active { background: var(--color-accent-subtle); color: var(--color-accent); border-color: var(--color-accent); }
   .compact-btn { font-family: var(--font-mono); font-size: var(--font-size-xs); padding: var(--space-1) var(--space-4); height: 26px; }
   .compact-btn.is-active { background: var(--color-accent-subtle); color: var(--color-accent); border-color: var(--color-accent); }
-  .divider-v { width: 1px; height: 20px; background: var(--color-border); flex-shrink: 0; }
+  .divider-v { width: 1px; height: 20px; background: var(--color-border); flex-shrink: 0; opacity: 0.5; }
   .toolbar-actions { display: flex; align-items: center; gap: var(--space-4); margin-left: auto; }
   .toolbar-actions .btn { height: 28px; font-size: var(--font-size-xs); padding: 0 var(--space-6); gap: var(--space-3); }
   .toolbar-actions .btn.is-active { background: var(--color-accent-subtle); color: var(--color-accent); border-color: var(--color-accent); }

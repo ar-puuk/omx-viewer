@@ -9,80 +9,80 @@
 
 :root,
 :root[data-theme='dark'] {
-  /* Backgrounds — layered depth system */
-  --color-bg-base:        #0a0b0d;   /* page background — deepest */
-  --color-bg-surface:     #111318;   /* panel / card surfaces */
-  --color-bg-elevated:    #1a1d24;   /* inputs, code blocks, elevated cards */
-  --color-bg-overlay:     #22262f;   /* dropdowns, tooltips, popovers */
+  /* Backgrounds — layered depth system (neutral zinc, no blue tint) */
+  --color-bg-base:        #09090b;   /* page background — deepest */
+  --color-bg-surface:     #111113;   /* panel / card surfaces */
+  --color-bg-elevated:    #191919;   /* inputs, code blocks, elevated cards */
+  --color-bg-overlay:     #222222;   /* dropdowns, tooltips, popovers */
 
-  /* Borders */
-  --color-border:         #2a2f3a;   /* default separator */
-  --color-border-strong:  #3d4455;   /* stronger border, active states */
+  /* Borders — zinc neutrals */
+  --color-border:         #27272a;   /* default separator */
+  --color-border-strong:  #3f3f46;   /* stronger border, active states */
 
-  /* Text */
-  --color-text-primary:   #e8eaf0;   /* primary readable text */
-  --color-text-secondary: #8b919e;   /* labels, secondary info */
-  --color-text-muted:     #555c6e;   /* placeholders, disabled, deemphasized */
-  --color-text-inverse:   #0a0b0d;   /* text on accent backgrounds */
+  /* Text — high contrast */
+  --color-text-primary:   #fafafa;   /* primary readable text */
+  --color-text-secondary: #a1a1aa;   /* labels, secondary info */
+  --color-text-muted:     #52525b;   /* placeholders, disabled, deemphasized */
+  --color-text-inverse:   #09090b;   /* text on accent backgrounds */
 
-  /* Accent — electric blue, primary interactive color */
-  --color-accent:         #4f8ef7;
-  --color-accent-hover:   #6ba0f9;
-  --color-accent-active:  #3a7af5;
-  --color-accent-subtle:  #1a2a4a;   /* very subtle accent tint for selected states */
+  /* Accent — blue-500/400/600 (Linear/Vercel standard) */
+  --color-accent:         #3b82f6;
+  --color-accent-hover:   #60a5fa;
+  --color-accent-active:  #2563eb;
+  --color-accent-subtle:  #172554;   /* blue-950, richer tint */
 
   /* Semantic value colors */
-  --color-positive:       #3dd68c;   /* positive / gain values */
-  --color-negative:       #f56565;   /* negative / loss values */
-  --color-warning:        #f6c343;   /* warnings, caution */
-  --color-zero:           #555c6e;   /* zero values — visually muted */
+  --color-positive:       #22c55e;   /* green-500 */
+  --color-negative:       #ef4444;   /* red-500 */
+  --color-warning:        #eab308;   /* yellow-500 */
+  --color-zero:           #52525b;   /* zinc-600 */
 
   /* Component-specific */
-  --color-tab-active-bg:  #1a1d24;
-  --color-tab-hover-bg:   #161920;
-  --color-header-bg:      #111318;
-  --color-toolbar-bg:     #111318;
-  --color-cell-hover:     #1e2230;
-  --color-cell-selected:  #1a2a4a;   /* pinned cell background */
-  --color-cell-pinned-ring: #4f8ef7; /* pinned cell outline */
+  --color-tab-active-bg:  #191919;
+  --color-tab-hover-bg:   #141414;
+  --color-header-bg:      #111113;
+  --color-toolbar-bg:     #111113;
+  --color-cell-hover:     #1c1c1f;
+  --color-cell-selected:  #172554;   /* pinned cell background */
+  --color-cell-pinned-ring: #3b82f6; /* pinned cell outline */
 
   /* Row/col header highlight for pinned cell */
-  --color-header-pinned:  #1e2f50;
+  --color-header-pinned:  #1e3a5f;
 
   /* Summary panel */
-  --color-summary-bg:     #0e1015;
-  --color-summary-header-bg: #111318;
+  --color-summary-bg:     #0c0c0e;
+  --color-summary-header-bg: #111113;
 
   /* Sidebar */
-  --color-sidebar-bg:     #0e1015;
-  --color-sidebar-section-bg: #111318;
+  --color-sidebar-bg:     #0c0c0e;
+  --color-sidebar-section-bg: #111113;
 
   /* Landing page */
-  --color-landing-bg:     #0a0b0d;
-  --color-dropzone-bg:    #0e1015;
-  --color-dropzone-border: #2a2f3a;
-  --color-dropzone-hover-bg: #111d30;
-  --color-dropzone-hover-border: #4f8ef7;
+  --color-landing-bg:     #09090b;
+  --color-dropzone-bg:    #0c0c0e;
+  --color-dropzone-border: #27272a;
+  --color-dropzone-hover-bg: #0f1729;
+  --color-dropzone-hover-border: #3b82f6;
 
   /* Modal overlay */
-  --color-modal-overlay:  rgba(0, 0, 0, 0.7);
+  --color-modal-overlay:  rgba(0, 0, 0, 0.75);
 
   /* Error / success banners */
   --color-error-bg:       #2d1515;
-  --color-error-border:   #f56565;
-  --color-error-text:     #f56565;
+  --color-error-border:   #ef4444;
+  --color-error-text:     #ef4444;
   --color-warning-bg:     #2d2510;
-  --color-warning-border: #f6c343;
+  --color-warning-border: #eab308;
   --color-success-bg:     #0f2d1f;
-  --color-success-border: #3dd68c;
+  --color-success-border: #22c55e;
 
   /* Scrollbar */
-  --color-scrollbar-thumb: #3d4455;
+  --color-scrollbar-thumb: #3f3f46;
   --color-scrollbar-track: transparent;
 
   /* Code / metadata values */
-  --color-code-bg:        #1a1d24;
-  --color-code-text:      #a8d8ea;
+  --color-code-bg:        #191919;
+  --color-code-text:      #7dd3fc;
 }
 
 /* --------------------------------------------------------------------------
@@ -90,20 +90,20 @@
    -------------------------------------------------------------------------- */
 
 :root[data-theme='light'] {
-  /* Backgrounds */
-  --color-bg-base:        #f4f5f7;
+  /* Backgrounds — zinc light scale */
+  --color-bg-base:        #fafafa;
   --color-bg-surface:     #ffffff;
   --color-bg-elevated:    #ffffff;
-  --color-bg-overlay:     #f0f1f4;
+  --color-bg-overlay:     #f4f4f5;
 
-  /* Borders */
-  --color-border:         #e1e4ea;
-  --color-border-strong:  #c8ccd6;
+  /* Borders — zinc neutrals */
+  --color-border:         #e4e4e7;
+  --color-border-strong:  #d4d4d8;
 
   /* Text */
-  --color-text-primary:   #1a1d24;
-  --color-text-secondary: #555c6e;
-  --color-text-muted:     #8b919e;
+  --color-text-primary:   #18181b;
+  --color-text-secondary: #52525b;
+  --color-text-muted:     #a1a1aa;
   --color-text-inverse:   #ffffff;
 
   /* Accent */
@@ -116,30 +116,30 @@
   --color-positive:       #16a34a;
   --color-negative:       #dc2626;
   --color-warning:        #d97706;
-  --color-zero:           #9ca3af;
+  --color-zero:           #a1a1aa;
 
   /* Component-specific */
   --color-tab-active-bg:  #ffffff;
-  --color-tab-hover-bg:   #f8f9fb;
-  --color-header-bg:      #f4f5f7;
-  --color-toolbar-bg:     #f4f5f7;
+  --color-tab-hover-bg:   #f4f4f5;
+  --color-header-bg:      #fafafa;
+  --color-toolbar-bg:     #fafafa;
   --color-cell-hover:     #f0f4ff;
   --color-cell-selected:  #dbeafe;
   --color-cell-pinned-ring: #2563eb;
   --color-header-pinned:  #bfdbfe;
 
   /* Summary panel */
-  --color-summary-bg:     #f8f9fb;
-  --color-summary-header-bg: #f0f1f4;
+  --color-summary-bg:     #f4f4f5;
+  --color-summary-header-bg: #e4e4e7;
 
   /* Sidebar */
-  --color-sidebar-bg:     #f8f9fb;
+  --color-sidebar-bg:     #f4f4f5;
   --color-sidebar-section-bg: #ffffff;
 
   /* Landing page */
-  --color-landing-bg:     #f4f5f7;
+  --color-landing-bg:     #fafafa;
   --color-dropzone-bg:    #ffffff;
-  --color-dropzone-border: #c8ccd6;
+  --color-dropzone-border: #d4d4d8;
   --color-dropzone-hover-bg: #eff6ff;
   --color-dropzone-hover-border: #2563eb;
 
@@ -156,19 +156,20 @@
   --color-success-border: #16a34a;
 
   /* Scrollbar */
-  --color-scrollbar-thumb: #c8ccd6;
+  --color-scrollbar-thumb: #d4d4d8;
   --color-scrollbar-track: transparent;
 
   /* Code */
-  --color-code-bg:        #f0f1f4;
-  --color-code-text:      #1e4d7b;
+  --color-code-bg:        #f4f4f5;
+  --color-code-text:      #1e40af;
 
   /* Override shadow for light mode */
-  --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md:  0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow-lg:  0 4px 20px rgba(0, 0, 0, 0.10);
-  --shadow-xl:  0 8px 40px rgba(0, 0, 0, 0.12);
-  --shadow-glow-accent: 0 0 16px rgba(37, 99, 235, 0.2);
+  --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md:  0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-lg:  0 4px 24px rgba(0, 0, 0, 0.08);
+  --shadow-xl:  0 8px 48px rgba(0, 0, 0, 0.10);
+  --shadow-glow-accent: 0 0 16px rgba(37, 99, 235, 0.15);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 /* --------------------------------------------------------------------------

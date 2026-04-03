@@ -85,9 +85,13 @@ The following bugs have been fixed:
 
 ---
 
-## Currently Broken / Not Yet Tested
+## Currently Broken
 
-- [ ] **Cell Navigator** — scroll-to-center on both row and column virtualizers.
+- [ ] **Scroll does not load new chunks** — Vertical and horizontal scrolling does not fetch new matrix data. The initial visible chunk loads correctly, but scrolling beyond it leaves cells empty. The `onscroll` handler and `fetchVisibleChunks` logic appear wired up but chunks are not being fetched on scroll. Needs deeper investigation into why the handler isn't triggering or why fetched data isn't rendering.
+- [ ] **Cell Navigator (Go to Cell)** — Entering row/col and pressing Go does not scroll the grid to the target cell. The `scrollToCell` function uses dynamic `import('svelte/store')` to call `get(rowVirt).scrollToIndex()` — may be a timing or reference issue.
+
+## Not Yet Tested
+
 - [ ] **Pinned cell highlight** — ring distinguishable from hover; row/col headers highlighted.
 - [ ] **Cross-matrix cell inspector** — reads `[row, col]` from every matrix, shows in sidebar.
 - [ ] **Math worker arithmetic** — ArithmeticModal compute. Transferable Float64Array flow.

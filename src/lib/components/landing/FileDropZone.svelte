@@ -72,10 +72,10 @@
 </div>
 
 <style>
-  .dropzone { position: relative; width: 100%; max-width: 520px; background: var(--color-dropzone-bg); border: 1.5px dashed var(--color-dropzone-border); border-radius: var(--radius-xl); cursor: pointer; transition: border-color var(--transition-normal), background-color var(--transition-normal), box-shadow var(--transition-normal); outline: none; user-select: none; }
+  .dropzone { position: relative; width: 100%; max-width: 520px; background: rgba(12, 12, 14, 0.5); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px dashed var(--color-dropzone-border); border-radius: var(--radius-xl); cursor: pointer; transition: border-color var(--transition-normal), background-color var(--transition-normal), box-shadow var(--transition-normal), border-style var(--transition-normal); outline: none; user-select: none; }
   .dropzone:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
-  .dropzone:hover:not(.is-disabled) { border-color: var(--color-border-strong); background: var(--color-bg-elevated); }
-  .dropzone.is-dragging-over { border-color: var(--color-accent); background: var(--color-dropzone-hover-bg); animation: glow-pulse 1.5s ease-in-out infinite; }
+  .dropzone:hover:not(.is-disabled) { border-color: var(--color-border-strong); border-style: solid; background: rgba(25, 25, 25, 0.7); box-shadow: 0 0 0 1px var(--color-border-strong), var(--shadow-md); }
+  .dropzone.is-dragging-over { border-color: var(--color-accent); border-style: solid; background: var(--color-dropzone-hover-bg); animation: glow-pulse 1.5s ease-in-out infinite; }
   .dropzone.is-disabled { opacity: 0.5; cursor: not-allowed; }
   .dropzone-inner { display: flex; flex-direction: column; align-items: center; gap: var(--space-8); padding: var(--space-24) var(--space-16); }
   .icon-wrap { color: var(--color-text-muted); display: flex; align-items: center; justify-content: center; transition: color var(--transition-normal), transform var(--transition-spring); }
@@ -85,5 +85,5 @@
   .secondary-text { font-size: var(--font-size-sm); color: var(--color-text-muted); }
   .link { color: var(--color-accent); text-decoration: underline; text-underline-offset: 2px; }
   .meta { display: flex; gap: var(--space-4); flex-wrap: wrap; justify-content: center; }
-  @keyframes glow-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(79, 142, 247, 0); } 50% { box-shadow: 0 0 24px 4px rgba(79, 142, 247, 0.2); } }
+  @keyframes glow-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } 50% { box-shadow: 0 0 24px 4px rgba(59, 130, 246, 0.2); } }
 </style>

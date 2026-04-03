@@ -112,21 +112,21 @@
 </aside>
 
 <style>
-  .sidebar { width: var(--sidebar-width); min-width: var(--sidebar-width); background: var(--color-sidebar-bg); border-left: 1px solid var(--color-border); display: flex; flex-direction: column; overflow: hidden; transition: width var(--transition-slow) cubic-bezier(0.16, 1, 0.3, 1), min-width var(--transition-slow) cubic-bezier(0.16, 1, 0.3, 1); flex-shrink: 0; }
+  .sidebar { width: var(--sidebar-width); min-width: var(--sidebar-width); background: var(--color-sidebar-bg); border-left: none; box-shadow: -1px 0 0 var(--color-border); display: flex; flex-direction: column; overflow: hidden; transition: width var(--transition-slow) cubic-bezier(0.16, 1, 0.3, 1), min-width var(--transition-slow) cubic-bezier(0.16, 1, 0.3, 1); flex-shrink: 0; }
   .sidebar.is-collapsed { width: 32px; min-width: 32px; }
   .sidebar-inner { display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; flex: 1; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar-thumb) transparent; }
   .sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-8); border-bottom: 1px solid var(--color-border); flex-shrink: 0; position: sticky; top: 0; background: var(--color-sidebar-bg); z-index: var(--z-raised); }
   .sidebar-title { font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-muted); letter-spacing: var(--letter-spacing-widest); text-transform: uppercase; }
   .collapse-btn { color: var(--color-text-muted); width: 24px; height: 24px; }
-  .sidebar-section { padding: var(--space-6) var(--space-8); border-bottom: 1px solid var(--color-border); }
-  .section-title { font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--color-text-muted); letter-spacing: var(--letter-spacing-wider); text-transform: uppercase; margin-bottom: var(--space-6); display: flex; align-items: center; gap: var(--space-4); }
+  .sidebar-section { padding: var(--space-8) var(--space-8); border-bottom: 1px solid var(--color-border); }
+  .section-title { font-family: var(--font-mono); font-size: 10px; font-weight: var(--font-weight-semibold); color: var(--color-text-muted); letter-spacing: var(--letter-spacing-widest); text-transform: uppercase; margin-bottom: var(--space-6); display: flex; align-items: center; gap: var(--space-4); }
   .meta-grid { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-6); align-items: baseline; }
   .meta-key { font-size: var(--font-size-xs); color: var(--color-text-muted); font-family: var(--font-mono); white-space: nowrap; }
   .meta-val { font-size: var(--font-size-xs); color: var(--color-text-primary); font-family: var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .cell-section .section-title { color: var(--color-accent); }
   .matrix-values { display: flex; flex-direction: column; gap: var(--space-1); }
-  .matrix-value-row { display: flex; align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-4); border-radius: var(--radius-sm); cursor: pointer; width: 100%; transition: background-color var(--transition-fast); gap: var(--space-4); }
-  .matrix-value-row:hover { background: var(--color-bg-elevated); }
+  .matrix-value-row { display: flex; align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); cursor: pointer; width: 100%; transition: background-color var(--transition-fast), box-shadow var(--transition-fast); gap: var(--space-4); }
+  .matrix-value-row:hover { background: var(--color-bg-elevated); box-shadow: 0 0 0 1px var(--color-border); }
   .matrix-name { font-size: var(--font-size-xs); color: var(--color-text-secondary); font-family: var(--font-mono); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .matrix-val { font-size: var(--font-size-xs); color: var(--color-text-primary); font-family: var(--font-mono); font-variant-numeric: tabular-nums; flex-shrink: 0; }
   .expand-btn { width: 32px; height: 48px; display: flex; align-items: center; justify-content: center; color: var(--color-text-muted); border-radius: 0; }

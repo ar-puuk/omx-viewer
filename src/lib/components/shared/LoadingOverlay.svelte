@@ -35,7 +35,7 @@
     position: fixed;
     inset: 0;
     z-index: var(--z-modal);
-    background: rgba(10, 11, 13, 0.88);
+    background: rgba(9, 9, 11, 0.88);
     backdrop-filter: blur(4px);
     display: flex;
     align-items: center;

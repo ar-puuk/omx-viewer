@@ -103,9 +103,9 @@
 
 <style>
   .backdrop { position: fixed; inset: 0; z-index: var(--z-modal); background: var(--color-modal-overlay); display: flex; align-items: center; justify-content: center; padding: var(--space-8); backdrop-filter: blur(4px); }
-  .modal { background: var(--color-bg-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); width: 100%; max-width: 440px; display: flex; flex-direction: column; overflow: hidden; }
+  .modal { background: var(--color-bg-surface); border: 1px solid var(--color-border-strong); border-radius: var(--radius-xl); box-shadow: var(--shadow-xl), 0 0 0 1px var(--color-border); width: 100%; max-width: 440px; display: flex; flex-direction: column; overflow: hidden; }
   .modal-header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-8) var(--space-10); border-bottom: 1px solid var(--color-border); }
-  .modal-title { font-family: var(--font-mono); font-size: var(--font-size-md); font-weight: var(--font-weight-semibold); color: var(--color-text-primary); }
+  .modal-title { font-family: var(--font-sans); font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--color-text-primary); letter-spacing: -0.01em; }
   .modal-body { padding: var(--space-10); display: flex; flex-direction: column; gap: var(--space-10); }
   .modal-desc { font-size: var(--font-size-sm); color: var(--color-text-secondary); line-height: var(--line-height-relaxed); }
   .form-group { display: flex; flex-direction: column; gap: var(--space-3); }

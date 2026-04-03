@@ -36,7 +36,8 @@
 <style>
   .tab { display: flex; align-items: center; gap: var(--space-3); height: 100%; padding: 0 var(--space-6); border-right: 1px solid var(--color-border); cursor: pointer; white-space: nowrap; transition: background-color var(--transition-fast), color var(--transition-fast); color: var(--color-text-muted); position: relative; user-select: none; min-width: 80px; max-width: 200px; }
   .tab:hover { background: var(--color-tab-hover-bg); color: var(--color-text-secondary); }
-  .tab.is-active { background: var(--color-tab-active-bg); color: var(--color-text-primary); border-bottom: 2px solid var(--color-accent); }
+  .tab.is-active { background: var(--color-tab-active-bg); color: var(--color-text-primary); }
+  .tab.is-active::after { content: ''; position: absolute; bottom: 0; left: var(--space-4); right: var(--space-4); height: 2px; background: var(--color-accent); border-radius: var(--radius-full); }
   .tab.is-ephemeral { font-style: italic; }
   .ephemeral-badge { color: var(--color-accent); font-size: var(--font-size-xs); flex-shrink: 0; }
   .tab-label { font-family: var(--font-mono); font-size: var(--font-size-xs); overflow: hidden; text-overflow: ellipsis; flex: 1; letter-spacing: var(--letter-spacing-tight); }
