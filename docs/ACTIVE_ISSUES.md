@@ -1,6 +1,6 @@
 # Active Issues & Development Status
 
-Last updated: 2026-04-02
+Last updated: 2026-04-04
 
 ---
 
@@ -87,8 +87,8 @@ The following bugs have been fixed:
 
 ## Currently Broken
 
-- [ ] **Scroll does not load new chunks** — Vertical and horizontal scrolling does not fetch new matrix data. The initial visible chunk loads correctly, but scrolling beyond it leaves cells empty. The `onscroll` handler and `fetchVisibleChunks` logic appear wired up but chunks are not being fetched on scroll. Needs deeper investigation into why the handler isn't triggering or why fetched data isn't rendering.
-- [ ] **Cell Navigator (Go to Cell)** — Entering row/col and pressing Go does not scroll the grid to the target cell. The `scrollToCell` function uses dynamic `import('svelte/store')` to call `get(rowVirt).scrollToIndex()` — may be a timing or reference issue.
+- [x] ~~**Scroll does not load new chunks**~~ — Fixed in commits `d810080` and `364560a`. Scroll-driven chunk fetching now works via `onscroll` handler.
+- [ ] **Cell Navigator (Go to Cell)** — Entering row/col and pressing Go does not scroll the grid to the target cell. Needs investigation.
 
 ## Not Yet Tested
 
@@ -133,8 +133,8 @@ store.openFile() // call methods
 
 ## Next Steps (priority order)
 
-1. Verify summary panel works for all 7 functions × 2 dimensions × 2 scopes
-2. Test Cell Navigator scroll-to-center
-3. Test ArithmeticModal with math.worker
-4. Test cross-matrix cell inspector
-5. Test CSV export
+1. Fix Cell Navigator scroll-to-center
+2. Test ArithmeticModal with math.worker
+3. Test cross-matrix cell inspector
+4. Test CSV export
+5. Test pinned cell highlight and theme toggle

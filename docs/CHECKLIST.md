@@ -59,7 +59,7 @@ Mark items as they are confirmed working.
 - [x] No `export let x = $state()` with external reassignment
 
 ## UI
-- [ ] IBM Plex Mono used for all matrix cell values
+- [x] Geist Mono used for all matrix cell values (with IBM Plex Mono fallback)
 - [x] Dark theme is default
 - [ ] Light theme toggle works
 

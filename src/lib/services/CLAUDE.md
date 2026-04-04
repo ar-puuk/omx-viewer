@@ -129,6 +129,9 @@ store.addChunkToCache(tabId, chunkStart, data, MAX_CACHED_CHUNKS)
 
 ## duckdbService.ts — Main-thread API
 
+> **Note:** DuckDB worker is retained but **not currently invoked**. Aggregations now use
+> streaming h5wasm (see below). The worker message protocol is documented for reference.
+
 ### Worker message types
 ```
 Main → Worker:
@@ -145,7 +148,15 @@ Worker → Main:
   { type: 'duckdb:query:error', id, error }
 ```
 
-### Registration flow for aggregation
+### Streaming aggregation (current implementation)
+Aggregations are computed via `runStreamingAggregation()` in `duckdbService.ts`:
+1. Reads h5wasm row chunks (200 rows at a time) via `sliceRawChunk()`
+2. Accumulates per-row or per-col aggregates in a tight JS loop
+3. Peak memory: one chunk (~3 MB for 3,629 columns × float32)
+4. Processes one matrix at a time with event-loop yields for UI responsiveness
+5. No DuckDB involvement — bypasses the 512 MB OOM limit entirely
+
+### Legacy DuckDB registration flow (not currently used)
 1. `sliceFullMatrix()` — reads entire matrix in chunks (for DuckDB only)
 2. `matrixToArrowIPCBatches()` — splits into 500-row Arrow IPC batches
 3. Send each batch as `duckdb:register_batch` (isFirst=true for first, false for rest)
