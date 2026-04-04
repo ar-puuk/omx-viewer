@@ -151,7 +151,16 @@
     scrollToCell = (row: number, col: number) => {
       if (rowVirtStore && colVirtStore) {
         get(rowVirtStore).scrollToIndex(row, { align: 'center' })
-        get(colVirtStore).scrollToIndex(col, { align: 'center' })
+        // For columns, manually compute offset to center within the data area
+        // (excluding the sticky row header width), since TanStack Virtual
+        // centers based on the full scroll container width.
+        if (scrollContainer) {
+          const visibleWidth = scrollContainer.clientWidth - ROW_HEADER_WIDTH
+          const targetOffset = col * COL_WIDTH - (visibleWidth - COL_WIDTH) / 2
+          get(colVirtStore).scrollToOffset(Math.max(0, targetOffset), { align: 'start' })
+        } else {
+          get(colVirtStore).scrollToIndex(col, { align: 'center' })
+        }
         // Fetch chunks at the new scroll position after scrollTo completes
         setTimeout(fetchVisibleChunks, SCROLL_DEBOUNCE_MS + 16)
       }
