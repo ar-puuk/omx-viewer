@@ -4,7 +4,7 @@
   // Virtualizers are created imperatively once the scroll container mounts.
 
   import { createVirtualizer } from '@tanstack/svelte-virtual'
-  import type { Readable } from 'svelte/store'
+  import { get } from 'svelte/store'
   import { store } from '../../state/matrixStore.svelte.js'
   import { sliceMatrixRows, sliceCellAllMatrices } from '../../services/h5wasmService.js'
   import { formatNumber, getValueClass } from '../../utils/formatNumber.js'
@@ -25,24 +25,34 @@
   let scrollError = $state<string | null>(null)
   let debounceTimer: ReturnType<typeof setTimeout>
 
-  // Virtualizer stores — created once container is available
+  // Plain variables for virtualizer store references (used by scrollToCell)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let rowVirt = $state<Readable<any> | null>(null)
+  let rowVirtStore: any = null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let colVirt = $state<Readable<any> | null>(null)
+  let colVirtStore: any = null
+
+  // $state variables for template-consumed data — manually synced via .subscribe()
+  // This avoids wrapping Svelte 4-era stores in $state proxies, which breaks
+  // the $ auto-subscription in Svelte 5.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let virtualRows = $state<any[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let virtualCols = $state<any[]>([])
+  let totalHeight = $state(0)
+  let totalWidth = $state(0)
 
   // Create virtualizers when the scroll container binds and nrows/ncols are known
   $effect(() => {
     if (!scrollContainer || store.nrows === 0 || store.ncols === 0) return
 
-    rowVirt = createVirtualizer({
+    const rv = createVirtualizer({
       count: store.nrows,
       getScrollElement: () => scrollContainer!,
       estimateSize: () => ROW_HEIGHT,
       overscan: GRID_ROW_OVERSCAN,
     })
 
-    colVirt = createVirtualizer({
+    const cv = createVirtualizer({
       count: store.ncols,
       getScrollElement: () => scrollContainer!,
       estimateSize: () => COL_WIDTH,
@@ -50,11 +60,31 @@
       horizontal: true,
     })
 
+    rowVirtStore = rv
+    colVirtStore = cv
+
+    // Manual subscriptions — write scroll-driven updates to $state variables
+    const unsub1 = rv.subscribe((inst: { getVirtualItems: () => any[]; getTotalSize: () => number }) => {
+      virtualRows = inst.getVirtualItems()
+      totalHeight = inst.getTotalSize()
+    })
+    const unsub2 = cv.subscribe((inst: { getVirtualItems: () => any[]; getTotalSize: () => number }) => {
+      virtualCols = inst.getVirtualItems()
+      totalWidth = inst.getTotalSize()
+    })
+
     // Fetch initial visible chunks once virtualizers are ready.
     // setTimeout escapes the $effect reactive tracking context —
     // fetchVisibleChunks reads store.activeTab (reactive), which would
     // create an infinite loop if called synchronously inside $effect.
     setTimeout(fetchVisibleChunks, 0)
+
+    return () => {
+      unsub1()
+      unsub2()
+      rowVirtStore = null
+      colVirtStore = null
+    }
   })
 
   // ---------------------------------------------------------------------------
@@ -119,14 +149,11 @@
   // Expose scrollToCell for CellNavigator
   $effect(() => {
     scrollToCell = (row: number, col: number) => {
-      if (rowVirt && colVirt) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        import('svelte/store').then(({ get }: any) => {
-          get(rowVirt).scrollToIndex(row, { align: 'center' })
-          get(colVirt).scrollToIndex(col, { align: 'center' })
-          // Fetch chunks at the new scroll position after scrollTo completes
-          setTimeout(fetchVisibleChunks, SCROLL_DEBOUNCE_MS + 16)
-        })
+      if (rowVirtStore && colVirtStore) {
+        get(rowVirtStore).scrollToIndex(row, { align: 'center' })
+        get(colVirtStore).scrollToIndex(col, { align: 'center' })
+        // Fetch chunks at the new scroll position after scrollTo completes
+        setTimeout(fetchVisibleChunks, SCROLL_DEBOUNCE_MS + 16)
       }
     }
   })
@@ -185,15 +212,7 @@
     aria-label="Matrix data grid"
     onscroll={handleScroll}
   >
-    {#if rowVirt && colVirt}
-      <!-- Subscribe to the Svelte stores with $ prefix -->
-      {@const rv = $rowVirt}
-      {@const cv = $colVirt}
-      {@const virtualRows = rv.getVirtualItems()}
-      {@const virtualCols = cv.getVirtualItems()}
-      {@const totalHeight = rv.getTotalSize()}
-      {@const totalWidth  = cv.getTotalSize()}
-
+    {#if virtualRows.length > 0 && virtualCols.length > 0}
       <!-- Sticky column header row -->
       <div class="grid-header-row" style="width:{totalWidth + ROW_HEADER_WIDTH}px;">
         <div class="grid-corner-cell" style="width:{ROW_HEADER_WIDTH}px;">
