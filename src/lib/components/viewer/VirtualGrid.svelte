@@ -9,7 +9,7 @@
   import { sliceMatrixRows, sliceCellAllMatrices } from '../../services/h5wasmService.js'
   import { formatNumber, getValueClass } from '../../utils/formatNumber.js'
   import {
-    ROW_HEIGHT, COL_WIDTH,
+    ROW_HEIGHT, COL_WIDTH, HEADER_HEIGHT,
     GRID_ROW_OVERSCAN, GRID_COL_OVERSCAN,
     DEFAULT_ROW_CHUNK_SIZE,
     SCROLL_DEBOUNCE_MS,
@@ -149,18 +149,21 @@
   // Expose scrollToCell for CellNavigator
   $effect(() => {
     scrollToCell = (row: number, col: number) => {
-      if (rowVirtStore && colVirtStore) {
-        get(rowVirtStore).scrollToIndex(row, { align: 'center' })
-        // For columns, manually compute offset to center within the data area
-        // (excluding the sticky row header width), since TanStack Virtual
-        // centers based on the full scroll container width.
-        if (scrollContainer) {
-          const visibleWidth = scrollContainer.clientWidth - ROW_HEADER_WIDTH
-          const targetOffset = col * COL_WIDTH - (visibleWidth - COL_WIDTH) / 2
-          get(colVirtStore).scrollToOffset(Math.max(0, targetOffset), { align: 'start' })
-        } else {
-          get(colVirtStore).scrollToIndex(col, { align: 'center' })
-        }
+      if (rowVirtStore && colVirtStore && scrollContainer) {
+        const rv = get(rowVirtStore)
+        const cv = get(colVirtStore)
+
+        // Manually compute offsets that center the cell within the actual
+        // visible data area, accounting for sticky headers that TanStack
+        // Virtual's built-in 'center' alignment doesn't know about.
+        const visibleHeight = scrollContainer.clientHeight - HEADER_HEIGHT
+        const rowOffset = row * ROW_HEIGHT - (visibleHeight - ROW_HEIGHT) / 2
+        rv.scrollToOffset(Math.max(0, rowOffset))
+
+        const visibleWidth = scrollContainer.clientWidth - ROW_HEADER_WIDTH
+        const colOffset = col * COL_WIDTH - (visibleWidth - COL_WIDTH) / 2
+        cv.scrollToOffset(Math.max(0, colOffset))
+
         // Fetch chunks at the new scroll position after scrollTo completes
         setTimeout(fetchVisibleChunks, SCROLL_DEBOUNCE_MS + 16)
       }
