@@ -4,7 +4,6 @@
   // Virtualizers are created imperatively once the scroll container mounts.
 
   import { createVirtualizer } from '@tanstack/svelte-virtual'
-  import { get } from 'svelte/store'
   import { store } from '../../state/matrixStore.svelte.js'
   import { sliceMatrixRows, sliceCellAllMatrices } from '../../services/h5wasmService.js'
   import { formatNumber, getValueClass } from '../../utils/formatNumber.js'
@@ -149,24 +148,23 @@
   // Expose scrollToCell for CellNavigator
   $effect(() => {
     scrollToCell = (row: number, col: number) => {
-      if (rowVirtStore && colVirtStore && scrollContainer) {
-        const rv = get(rowVirtStore)
-        const cv = get(colVirtStore)
+      if (!scrollContainer) return
 
-        // Manually compute offsets that center the cell within the actual
-        // visible data area, accounting for sticky headers that TanStack
-        // Virtual's built-in 'center' alignment doesn't know about.
-        const visibleHeight = scrollContainer.clientHeight - HEADER_HEIGHT
-        const rowOffset = row * ROW_HEIGHT - (visibleHeight - ROW_HEIGHT) / 2
-        rv.scrollToOffset(Math.max(0, rowOffset))
+      // Compute offsets that center the target cell in the visible data area,
+      // accounting for sticky headers. Single atomic scrollTo call avoids the
+      // rAF reconcile race that occurs when calling each TanStack virtualizer's
+      // scrollToOffset() separately (each call triggers scheduleScrollReconcile
+      // which only sets one axis, and the two rAF loops can overwrite each other).
+      const visibleHeight = scrollContainer.clientHeight - HEADER_HEIGHT
+      const rowOffset = Math.max(0, row * ROW_HEIGHT - (visibleHeight - ROW_HEIGHT) / 2)
 
-        const visibleWidth = scrollContainer.clientWidth - ROW_HEADER_WIDTH
-        const colOffset = col * COL_WIDTH - (visibleWidth - COL_WIDTH) / 2
-        cv.scrollToOffset(Math.max(0, colOffset))
+      const visibleWidth = scrollContainer.clientWidth - ROW_HEADER_WIDTH
+      const colOffset = Math.max(0, col * COL_WIDTH - (visibleWidth - COL_WIDTH) / 2)
 
-        // Fetch chunks at the new scroll position after scrollTo completes
-        setTimeout(fetchVisibleChunks, SCROLL_DEBOUNCE_MS + 16)
-      }
+      scrollContainer.scrollTo({ top: rowOffset, left: colOffset, behavior: 'instant' })
+
+      // Fetch chunks at the new scroll position after scrollTo completes
+      setTimeout(fetchVisibleChunks, SCROLL_DEBOUNCE_MS + 16)
     }
   })
 
