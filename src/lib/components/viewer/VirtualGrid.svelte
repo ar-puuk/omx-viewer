@@ -234,7 +234,7 @@
           <div
             class="grid-col-header"
             class:is-pinned={store.pinnedCell?.col === vcol.index}
-            style="width:{vcol.size}px; transform:translateX({vcol.start}px);"
+            style="position:absolute; top:0; left:{vcol.start + ROW_HEADER_WIDTH}px; width:{vcol.size}px; height:100%;"
             role="columnheader"
             aria-colindex={vcol.index + 1}
             title={getLabel(vcol.index)}
@@ -268,7 +268,7 @@
                 class="grid-cell {val !== null ? getValueClass(val) : 'is-loading'}"
                 class:is-pinned={pinned}
                 class:is-pinned-col={pinnedC}
-                style="width:{vcol.size}px; min-width:{vcol.size}px; transform:translateX({vcol.start}px);"
+                style="position:absolute; top:0; left:{vcol.start + ROW_HEADER_WIDTH}px; width:{vcol.size}px; height:100%;"
                 role="gridcell"
                 aria-colindex={vcol.index + 1}
                 aria-selected={pinned}

@@ -88,7 +88,7 @@ The following bugs have been fixed:
 ## Currently Broken
 
 - [x] ~~**Scroll does not load new chunks**~~ — Fixed in commits `d810080` and `364560a`. Scroll-driven chunk fetching now works via `onscroll` handler.
-- [ ] **Cell Navigator (Go to Cell)** — Entering row/col and pressing Go does not scroll the grid to the target cell. Needs investigation.
+- [x] ~~**Cell Navigator (Go to Cell)**~~ — Fixed. Two bugs: (1) cells/col-headers used `transform: translateX(vcol.start)` as flex items, causing visual spacing to double (effective column width 176px not 88px) because each item's natural flex position accumulated on top of the transform offset; fixed by switching to `position: absolute; left: ROW_HEADER_WIDTH + vcol.start`. (2) Two separate TanStack `scrollToOffset()` calls raced via `scheduleScrollReconcile` rAF — fixed by single atomic `scrollContainer.scrollTo({ top, left })` call.
 
 ## Not Yet Tested
 

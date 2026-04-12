@@ -32,12 +32,21 @@ const colVirtualizer = createVirtualizer({
 .grid-scroll-container           ← single scrollable element (both axes)
 ├── .grid-header-row             ← position: sticky; top: 0
 │   ├── .grid-corner-cell        ← position: sticky; left: 0; z-index: sticky+1
-│   └── .grid-col-header ×N     ← transform: translateX({vcol.start}px)
+│   └── .grid-col-header ×N     ← position: absolute; left: ROW_HEADER_WIDTH + vcol.start
 └── .grid-data-area              ← height = totalHeight; width = totalWidth + ROW_HEADER_WIDTH
     └── .grid-row ×30max         ← position: absolute; transform: translateY({vrow.start}px)
         ├── .grid-row-header     ← position: sticky; left: 0
-        └── .grid-cell ×20max   ← transform: translateX({vcol.start}px)
+        └── .grid-cell ×20max   ← position: absolute; left: ROW_HEADER_WIDTH + vcol.start
 ```
+
+**CRITICAL:** Cells and column headers MUST use `position: absolute; left: ROW_HEADER_WIDTH + vcol.start`,
+NOT `transform: translateX(vcol.start)`.
+
+With `transform`, each item's visual position = (natural flex position) + translateX. In a flex row,
+the natural positions accumulate: item[i] is at `ROW_HEADER_WIDTH + i * COL_WIDTH` in the flow.
+Adding `translateX(col * COL_WIDTH)` gives `ROW_HEADER_WIDTH + i*COL_WIDTH + col*COL_WIDTH` — spacing
+doubles to 2×COL_WIDTH for i > 0. With `position: absolute`, items escape the flex flow and land
+directly at `ROW_HEADER_WIDTH + vcol.start = ROW_HEADER_WIDTH + col * COL_WIDTH`. Correct.
 
 ### 50ms scroll debounce
 Wrap the slice-fetch trigger in a debounce — do NOT fetch on every virtual item change:
