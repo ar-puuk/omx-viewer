@@ -163,6 +163,8 @@
 
 .grid-row:hover .grid-row-header {
   background: var(--color-cell-hover);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
 }
 
 /* Highlighted row — matches the pinned cell's row */
