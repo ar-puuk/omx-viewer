@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      coi-serviceworker MUST be the very first script tag.
+      It installs a Service Worker that adds COOP/COEP headers client-side,
+      enabling SharedArrayBuffer and Wasm features on GitHub Pages where
+      custom HTTP response headers cannot be configured.
+      Note: plain script (not module) so it runs synchronously before anything else.
+    -->
+    <script src="/omx-viewer/coi-serviceworker.js" crossorigin="anonymous"></script>
+
+    <title>OMX Viewer — Browser-native HDF5 matrix explorer</title>
+    <meta
+      name="description"
+      content="Explore OMX and HDF5 matrix files in your browser. No upload, no server. All processing happens locally via WebAssembly."
+    />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="OMX Viewer" />
+    <meta property="og:description" content="Browser-native HDF5 matrix explorer — no server, no upload, no limits." />
+    <meta property="og:type" content="website" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/omx-viewer/favicon.svg" />
+
+    <!--
+      Google Fonts: Inter (UI text) + JetBrains Mono (data cells, code).
+      display=swap prevents FOIT while fonts load.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--
+      Inline critical CSS: set dark theme on <html> before any paint to prevent
+      flash of unstyled / light-themed content.
+    -->
+    <style>
+      html {
+        background-color: #0e171e;
+        color: #f0ebe0;
+      }
+      #app {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+      }
+    </style>
+    <script type="module" crossorigin src="/omx-viewer/assets/index-DiNm4Okb.js"></script>
+    <link rel="stylesheet" crossorigin href="/omx-viewer/assets/index-u4Fxvi1Y.css">
+  </head>
+
+  <body>
+    <div id="app"></div>
+  </body>
+</html>
