@@ -1,68 +1,70 @@
 /* ==========================================================================
    theme.css — Color tokens for dark (default) and light themes.
    Applied via data-theme attribute on <html>: <html data-theme="dark">
+   Brand palette: navy-dark / warm-cream surfaces, amber accent.
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   Dark Theme (default) — Industrial-Precision Data Terminal aesthetic
+   Dark Theme (default) — Deep navy, warm off-white text, amber accent
    -------------------------------------------------------------------------- */
 
 :root,
 :root[data-theme='dark'] {
-  /* Backgrounds — layered depth system (neutral zinc, no blue tint) */
-  --color-bg-base:        #09090b;   /* page background — deepest */
-  --color-bg-surface:     #111113;   /* panel / card surfaces */
-  --color-bg-elevated:    #191919;   /* inputs, code blocks, elevated cards */
-  --color-bg-overlay:     #222222;   /* dropdowns, tooltips, popovers */
+  /* Surfaces — layered navy depth */
+  --color-bg-base:        #0e171e;   /* page background — brand dark */
+  --color-bg-surface:     #131e28;   /* panel / card surfaces */
+  --color-bg-elevated:    #192430;   /* inputs, code blocks, elevated cards */
+  --color-bg-overlay:     #1f2d3a;   /* dropdowns, tooltips, popovers */
 
-  /* Borders — zinc neutrals */
-  --color-border:         #27272a;   /* default separator */
-  --color-border-strong:  #3f3f46;   /* stronger border, active states */
+  /* Borders — navy neutrals */
+  --color-border:         #253545;   /* default separator */
+  --color-border-strong:  #2f4258;   /* stronger border, active states */
+  --color-border-subtle:  #1e2e3c;   /* faintest separator */
 
-  /* Text — high contrast */
-  --color-text-primary:   #fafafa;   /* primary readable text */
-  --color-text-secondary: #a1a1aa;   /* labels, secondary info */
-  --color-text-muted:     #52525b;   /* placeholders, disabled, deemphasized */
-  --color-text-inverse:   #09090b;   /* text on accent backgrounds */
+  /* Text — warm off-white */
+  --color-text-primary:   #f0ebe0;   /* primary readable text */
+  --color-text-secondary: #8a98a8;   /* labels, secondary info */
+  --color-text-muted:     #485868;   /* placeholders, disabled, deemphasized */
+  --color-text-inverse:   #1c1208;   /* text on bright amber buttons */
 
-  /* Accent — blue-500/400/600 (Linear/Vercel standard) */
-  --color-accent:         #3b82f6;
-  --color-accent-hover:   #60a5fa;
-  --color-accent-active:  #2563eb;
-  --color-accent-subtle:  #172554;   /* blue-950, richer tint */
+  /* Accent — amber-400 bright on dark navy */
+  --color-accent:         #fbbf24;
+  --color-accent-hover:   #f59e0b;
+  --color-accent-active:  #d97706;
+  --color-accent-subtle:  #2d1c04;   /* amber-950 tinted highlight */
 
   /* Semantic value colors */
   --color-positive:       #22c55e;   /* green-500 */
   --color-negative:       #ef4444;   /* red-500 */
   --color-warning:        #eab308;   /* yellow-500 */
-  --color-zero:           #52525b;   /* zinc-600 */
+  --color-zero:           #485868;   /* muted navy */
 
   /* Component-specific */
-  --color-tab-active-bg:  #191919;
-  --color-tab-hover-bg:   #141414;
-  --color-header-bg:      #111113;
-  --color-toolbar-bg:     #111113;
-  --color-cell-hover:     #1c1c1f;
-  --color-cell-selected:  #172554;   /* pinned cell background */
-  --color-cell-pinned-ring: #3b82f6; /* pinned cell outline */
+  --color-tab-active-bg:  #192430;
+  --color-tab-hover-bg:   #1e2e3c;
+  --color-header-bg:      #131e28;
+  --color-toolbar-bg:     #131e28;
+  --color-cell-hover:     #2d1c04;
+  --color-cell-selected:  #2d1c04;   /* pinned cell background */
+  --color-cell-pinned-ring: #fbbf24; /* pinned cell outline */
 
   /* Row/col header highlight for pinned cell */
-  --color-header-pinned:  #1e3a5f;
+  --color-header-pinned:  #2d1c04;
 
   /* Summary panel */
-  --color-summary-bg:     #0c0c0e;
-  --color-summary-header-bg: #111113;
+  --color-summary-bg:     #0e171e;
+  --color-summary-header-bg: #131e28;
 
   /* Sidebar */
-  --color-sidebar-bg:     #0c0c0e;
-  --color-sidebar-section-bg: #111113;
+  --color-sidebar-bg:     #0e171e;
+  --color-sidebar-section-bg: #131e28;
 
   /* Landing page */
-  --color-landing-bg:     #09090b;
-  --color-dropzone-bg:    #0c0c0e;
-  --color-dropzone-border: #27272a;
-  --color-dropzone-hover-bg: #0f1729;
-  --color-dropzone-hover-border: #3b82f6;
+  --color-landing-bg:     #0e171e;
+  --color-dropzone-bg:    #131e28;
+  --color-dropzone-border: #253545;
+  --color-dropzone-hover-bg: #2d1c04;
+  --color-dropzone-hover-border: #fbbf24;
 
   /* Modal overlay */
   --color-modal-overlay:  rgba(0, 0, 0, 0.75);
@@ -77,71 +79,72 @@
   --color-success-border: #22c55e;
 
   /* Scrollbar */
-  --color-scrollbar-thumb: #3f3f46;
+  --color-scrollbar-thumb: #253545;
   --color-scrollbar-track: transparent;
 
   /* Code / metadata values */
-  --color-code-bg:        #191919;
-  --color-code-text:      #7dd3fc;
+  --color-code-bg:        #192430;
+  --color-code-text:      #fcd34d;   /* amber-300 — warm on dark */
 }
 
 /* --------------------------------------------------------------------------
-   Light Theme — Clean technical, high-contrast readable
+   Light Theme — Warm cream surfaces, amber accent
    -------------------------------------------------------------------------- */
 
 :root[data-theme='light'] {
-  /* Backgrounds — zinc light scale */
-  --color-bg-base:        #fafafa;
-  --color-bg-surface:     #ffffff;
-  --color-bg-elevated:    #ffffff;
-  --color-bg-overlay:     #f4f4f5;
+  /* Surfaces — warm cream scale */
+  --color-bg-base:        #fffbf2;   /* brand cream */
+  --color-bg-surface:     #f2ece0;   /* panel chrome / sidebars */
+  --color-bg-elevated:    #ffffff;   /* cards / inputs */
+  --color-bg-overlay:     #f8f4ec;   /* subtle section bg */
 
-  /* Borders — zinc neutrals */
-  --color-border:         #e4e4e7;
-  --color-border-strong:  #d4d4d8;
+  /* Borders — warm tan */
+  --color-border:         #d4c5a9;   /* default (panel edges) */
+  --color-border-strong:  #b8a88a;   /* header bottoms, dividers */
+  --color-border-subtle:  #e8dfc8;   /* cell lines, separators */
 
-  /* Text */
-  --color-text-primary:   #18181b;
-  --color-text-secondary: #52525b;
-  --color-text-muted:     #a1a1aa;
-  --color-text-inverse:   #ffffff;
+  /* Text — warm near-black */
+  --color-text-primary:   #1c1208;
+  --color-text-secondary: #6b5e4a;
+  --color-text-muted:     #a8977a;
+  --color-text-inverse:   #ffffff;   /* text on amber button */
 
-  /* Accent */
-  --color-accent:         #2563eb;
-  --color-accent-hover:   #1d4ed8;
-  --color-accent-active:  #1e40af;
-  --color-accent-subtle:  #eff6ff;
+  /* Accent — amber-700 */
+  --color-accent:         #b45309;
+  --color-accent-hover:   #92400e;
+  --color-accent-active:  #78350f;
+  --color-accent-subtle:  #fef3c7;   /* amber-100 highlight */
 
   /* Semantic */
   --color-positive:       #16a34a;
   --color-negative:       #dc2626;
   --color-warning:        #d97706;
-  --color-zero:           #a1a1aa;
+  --color-zero:           #a8977a;
 
   /* Component-specific */
   --color-tab-active-bg:  #ffffff;
-  --color-tab-hover-bg:   #f4f4f5;
-  --color-header-bg:      #fafafa;
-  --color-toolbar-bg:     #fafafa;
-  --color-cell-hover:     #f0f4ff;
-  --color-cell-selected:  #dbeafe;
-  --color-cell-pinned-ring: #2563eb;
-  --color-header-pinned:  #bfdbfe;
+  --color-tab-hover-bg:   #f2ece0;
+  --color-header-bg:      #f2ece0;
+  --color-toolbar-bg:     #f2ece0;
+  --color-cell-hover:     #fef3c7;   /* amber-100 */
+  --color-cell-selected:  #fde68a;   /* amber-200 */
+  --color-cell-pinned-ring: #b45309;
+  --color-header-pinned:  #fde68a;
 
   /* Summary panel */
-  --color-summary-bg:     #f4f4f5;
-  --color-summary-header-bg: #e4e4e7;
+  --color-summary-bg:     #f8f4ec;
+  --color-summary-header-bg: #f2ece0;
 
   /* Sidebar */
-  --color-sidebar-bg:     #f4f4f5;
+  --color-sidebar-bg:     #f2ece0;
   --color-sidebar-section-bg: #ffffff;
 
   /* Landing page */
-  --color-landing-bg:     #fafafa;
+  --color-landing-bg:     #fffbf2;
   --color-dropzone-bg:    #ffffff;
-  --color-dropzone-border: #d4d4d8;
-  --color-dropzone-hover-bg: #eff6ff;
-  --color-dropzone-hover-border: #2563eb;
+  --color-dropzone-border: #d4c5a9;
+  --color-dropzone-hover-bg: #fef3c7;
+  --color-dropzone-hover-border: #b45309;
 
   /* Modal overlay */
   --color-modal-overlay:  rgba(0, 0, 0, 0.4);
@@ -156,19 +159,19 @@
   --color-success-border: #16a34a;
 
   /* Scrollbar */
-  --color-scrollbar-thumb: #d4d4d8;
+  --color-scrollbar-thumb: #d4c5a9;
   --color-scrollbar-track: transparent;
 
   /* Code */
-  --color-code-bg:        #f4f4f5;
-  --color-code-text:      #1e40af;
+  --color-code-bg:        #f8f4ec;
+  --color-code-text:      #92400e;   /* amber-800 */
 
-  /* Override shadow for light mode */
+  /* Override shadows for light mode */
   --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md:  0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-lg:  0 4px 24px rgba(0, 0, 0, 0.08);
   --shadow-xl:  0 8px 48px rgba(0, 0, 0, 0.10);
-  --shadow-glow-accent: 0 0 16px rgba(37, 99, 235, 0.15);
+  --shadow-glow-accent: 0 0 16px rgba(180, 83, 9, 0.15);
   --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 

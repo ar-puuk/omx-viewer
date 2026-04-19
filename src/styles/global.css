@@ -118,7 +118,7 @@ a:hover {
 
 :root {
   /* Font families */
-  --font-mono: 'Geist Mono', 'IBM Plex Mono', 'Fira Code', monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Fira Code', SFMono-Regular, Menlo, monospace;
   --font-sans: 'Inter', 'Helvetica Neue', Arial, sans-serif;
 
   /* Font size scale */
@@ -190,7 +190,7 @@ a:hover {
   --shadow-md:  0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-lg:  0 4px 24px rgba(0, 0, 0, 0.45);
   --shadow-xl:  0 8px 48px rgba(0, 0, 0, 0.5);
-  --shadow-glow-accent: 0 0 16px rgba(59, 130, 246, 0.3);
+  --shadow-glow-accent: 0 0 16px rgba(251, 191, 36, 0.3);
   --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
