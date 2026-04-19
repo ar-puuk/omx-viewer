@@ -127,6 +127,12 @@
   color: var(--color-accent);
 }
 
+/* Hovered column header */
+.grid-col-header.is-hovered-col:not(.is-pinned) {
+  background: var(--color-cell-hover);
+  color: var(--color-text-primary);
+}
+
 /* --------------------------------------------------------------------------
    5. Data Rows — TanStack Virtual positions each row absolutely
    -------------------------------------------------------------------------- */
@@ -255,6 +261,11 @@
 /* Column-highlight when the cell's column matches the pinned column */
 .grid-cell.is-pinned-col {
   background: rgba(251, 191, 36, 0.04);
+}
+
+/* Hovered column — same color as row hover */
+.grid-cell.is-hovered-col {
+  background: var(--color-cell-hover);
 }
 
 /* Loading / skeleton state for cells not yet fetched */

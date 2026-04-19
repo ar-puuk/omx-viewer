@@ -22,6 +22,7 @@
 
   let scrollContainer = $state<HTMLElement | null>(null)
   let scrollError = $state<string | null>(null)
+  let hoveredCol = $state<number | null>(null)
   let debounceTimer: ReturnType<typeof setTimeout>
 
   // Plain variables for virtualizer store references (used by scrollToCell)
@@ -221,6 +222,7 @@
     aria-colcount={store.ncols}
     aria-label="Matrix data grid"
     onscroll={handleScroll}
+    onmouseleave={() => hoveredCol = null}
   >
     {#if virtualRows.length > 0 && virtualCols.length > 0}
       <!-- Sticky column header row -->
@@ -234,6 +236,7 @@
           <div
             class="grid-col-header"
             class:is-pinned={store.pinnedCell?.col === vcol.index}
+            class:is-hovered-col={hoveredCol === vcol.index}
             style="position:absolute; top:0; left:{vcol.start + ROW_HEADER_WIDTH}px; width:{vcol.size}px; height:100%;"
             role="columnheader"
             aria-colindex={vcol.index + 1}
@@ -268,11 +271,13 @@
                 class="grid-cell {val !== null ? getValueClass(val) : 'is-loading'}"
                 class:is-pinned={pinned}
                 class:is-pinned-col={pinnedC}
+                class:is-hovered-col={!pinned && hoveredCol === vcol.index}
                 style="position:absolute; top:0; left:{vcol.start + ROW_HEADER_WIDTH}px; width:{vcol.size}px; height:100%;"
                 role="gridcell"
                 aria-colindex={vcol.index + 1}
                 aria-selected={pinned}
                 tabindex="-1"
+                onmouseenter={() => hoveredCol = vcol.index}
                 onclick={() => handleCellClick(vrow.index, vcol.index)}
                 onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCellClick(vrow.index, vcol.index) }}
               >
