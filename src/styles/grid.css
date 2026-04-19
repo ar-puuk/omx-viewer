@@ -161,6 +161,10 @@
   background: var(--color-cell-hover);
 }
 
+.grid-row:hover .grid-row-header {
+  background: var(--color-cell-hover);
+}
+
 /* Highlighted row — matches the pinned cell's row */
 .grid-row.is-pinned-row {
   background: rgba(251, 191, 36, 0.04);
