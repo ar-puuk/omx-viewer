@@ -110,9 +110,31 @@ export function formatForCSV(value: number, decimals: DecimalOption): string {
 // ---------------------------------------------------------------------------
 
 /**
+ * Neutralises CSV/formula injection (CWE-1236) and quotes a string cell for
+ * safe CSV output. String cells here (zone labels, matrix/dataset names) come
+ * from the OMX file itself, which is untrusted — anyone can hand-craft an
+ * HDF5 file with a label like `=HYPERLINK(...)` that a spreadsheet app
+ * executes as a formula the moment the exported CSV is opened. Prefixing a
+ * leading =, +, -, @, tab, or CR with an apostrophe forces spreadsheet apps
+ * to treat the cell as literal text instead — the standard OWASP mitigation.
+ *
+ * @param cell - Raw string cell value.
+ * @returns    - CSV-safe, quoted-if-necessary cell string.
+ */
+export function sanitizeCSVField(cell: string): string {
+  const neutralised = /^[=+\-@\t\r]/.test(cell) ? `'${cell}` : cell
+  // Quote strings that contain commas, quotes, or newlines
+  if (neutralised.includes(',') || neutralised.includes('"') || neutralised.includes('\n')) {
+    return `"${neutralised.replace(/"/g, '""')}"`
+  }
+  return neutralised
+}
+
+/**
  * Converts a summary result row (Array<number | string>) to a CSV line.
- * String values (index labels) are quoted if they contain commas or quotes.
- * Numeric values are formatted with formatForCSV.
+ * String values (index labels) are sanitized against formula injection and
+ * quoted if they contain commas or quotes. Numeric values are formatted with
+ * formatForCSV.
  *
  * @param row      - One row from SummaryResult.rows.
  * @param decimals - Decimal places for numeric values.
@@ -123,16 +145,7 @@ export function rowToCSVLine(
   decimals: DecimalOption
 ): string {
   return row
-    .map((cell) => {
-      if (typeof cell === 'string') {
-        // Quote strings that contain commas, quotes, or newlines
-        if (cell.includes(',') || cell.includes('"') || cell.includes('\n')) {
-          return `"${cell.replace(/"/g, '""')}"`
-        }
-        return cell
-      }
-      return formatForCSV(cell, decimals)
-    })
+    .map((cell) => typeof cell === 'string' ? sanitizeCSVField(cell) : formatForCSV(cell, decimals))
     .join(',')
 }
 
@@ -164,10 +177,11 @@ export function matrixSliceToCSV(
 ): string {
   const lines: string[] = []
 
-  // Header row
+  // Header row — colLabels come from the OMX file's lookup table, which is
+  // untrusted, so route them through sanitizeCSVField() same as row labels.
   const headerCells = ['index']
   for (let c = 0; c < ncols; c++) {
-    headerCells.push(colLabels ? colLabels[c] ?? String(c) : String(c))
+    headerCells.push(sanitizeCSVField(colLabels ? colLabels[c] ?? String(c) : String(c)))
   }
   lines.push(headerCells.join(','))
 
@@ -175,7 +189,7 @@ export function matrixSliceToCSV(
   for (let r = 0; r < nrows; r++) {
     const rowIdx = rowOffset + r
     const label = rowLabels ? (rowLabels[rowIdx] ?? String(rowIdx)) : String(rowIdx)
-    const cells: string[] = [label]
+    const cells: string[] = [sanitizeCSVField(label)]
     for (let c = 0; c < ncols; c++) {
       cells.push(formatForCSV(data[r * ncols + c], decimals))
     }
@@ -282,7 +296,9 @@ export function downloadTextFile(
 export function exportSummaryCSV(): boolean {
   const res = store.summaryResult
   if (!res || res.rows.length === 0) return false
-  const header = res.columnNames.join(',')
+  // columnNames includes matrix/dataset names read straight from the OMX
+  // file, which is untrusted — same sanitizeCSVField() treatment as row cells.
+  const header = res.columnNames.map(sanitizeCSVField).join(',')
   const rows = res.rows.map((r) => rowToCSVLine(r, store.decimalPlaces))
   const fn = AGGREGATION_FUNCTION_LABELS[res.config.fn].replace(/\s+/g, '_')
   const dim = AGGREGATION_DIMENSION_LABELS[res.config.dimension].replace(/\s+/g, '_')
