@@ -58,7 +58,7 @@
   "scripts": {
     "build:extension": "node esbuild.js",
     "build:webview": "node scripts/copy-codicons.js && vite build --config vite.webview.config.ts",
-    "build": "npm run build:extension && npm run build:webview",
+    "build": "node scripts/copy-changelog.js && npm run build:extension && npm run build:webview",
     "vscode:prepublish": "npm run build"
   },
   "dependencies": {

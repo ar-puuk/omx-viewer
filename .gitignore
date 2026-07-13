@@ -20,6 +20,10 @@ public/coi-serviceworker.js
 # (regenerated from node_modules on every build)
 apps/vscode-ext/public/
 
+# CHANGELOG.md copied from the repo root by apps/vscode-ext's build script
+# (root CHANGELOG.md is the single source of truth)
+apps/vscode-ext/CHANGELOG.md
+
 # Editor / OS
 .DS_Store
 Thumbs.db
