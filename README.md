@@ -135,4 +135,6 @@ Please follow the existing code style:
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE) for details. Bundled third-party components
+(h5wasm/HDF5, fonts, etc.) carry their own licenses — see
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

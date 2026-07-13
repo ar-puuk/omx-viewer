@@ -31,4 +31,6 @@ OMX (Open Matrix Format) is an HDF5-based convention for storing one or more nam
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE). Bundled third-party components (h5wasm/HDF5,
+codicons, fonts) carry their own licenses — see
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
