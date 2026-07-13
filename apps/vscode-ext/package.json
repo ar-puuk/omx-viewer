@@ -34,7 +34,23 @@
         ],
         "priority": "default"
       }
-    ]
+    ],
+    "commands": [
+      {
+        "command": "omxViewer.exportSummaryCsv",
+        "title": "OMX: Export Summary as CSV",
+        "icon": "$(export)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "omxViewer.exportSummaryCsv",
+          "when": "activeCustomEditorId == 'omxViewer.editor'",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "build:extension": "node esbuild.js",

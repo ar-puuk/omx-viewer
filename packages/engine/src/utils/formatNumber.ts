@@ -4,7 +4,8 @@
  * zero detection, and sign-based color class assignment.
  */
 
-import type { DecimalOption } from './constants.js'
+import { type DecimalOption, AGGREGATION_FUNCTION_LABELS, AGGREGATION_DIMENSION_LABELS } from './constants.js'
+import { store } from '../state/matrixStore.svelte.js'
 
 // ---------------------------------------------------------------------------
 // Formatter Cache
@@ -261,4 +262,30 @@ export function downloadTextFile(
   mimeType = 'text/csv;charset=utf-8;'
 ): void {
   fileSaveHandler(content, filename, mimeType)
+}
+
+// ---------------------------------------------------------------------------
+// Summary CSV export — shared between SummaryPanel's button and the VS Code
+// command palette action, so there's exactly one place building this CSV.
+// ---------------------------------------------------------------------------
+
+/**
+ * Exports the current aggregation summary result as CSV via the installed
+ * save handler (browser download, or the VS Code save dialog).
+ *
+ * @returns - false if there's no summary result to export yet (caller
+ *   decides how to surface that — SummaryPanel's button is simply disabled
+ *   until a result exists, so this can't happen there; the command palette
+ *   action can be invoked with no result yet, so it uses this to show an
+ *   informational message instead of silently doing nothing).
+ */
+export function exportSummaryCSV(): boolean {
+  const res = store.summaryResult
+  if (!res || res.rows.length === 0) return false
+  const header = res.columnNames.join(',')
+  const rows = res.rows.map((r) => rowToCSVLine(r, store.decimalPlaces))
+  const fn = AGGREGATION_FUNCTION_LABELS[res.config.fn].replace(/\s+/g, '_')
+  const dim = AGGREGATION_DIMENSION_LABELS[res.config.dimension].replace(/\s+/g, '_')
+  downloadTextFile([header, ...rows].join('\n'), `summary_${fn}_${dim}.csv`)
+  return true
 }

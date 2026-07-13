@@ -10,6 +10,7 @@
     openOMXFile,
     OMXValidationError,
     setFileSaveHandler,
+    exportSummaryCSV,
     logger,
   } from '@omx-viewer/engine'
 
@@ -63,6 +64,18 @@
     const msg = event.data as { type: string; name?: string; bytesBase64?: string }
     if (msg.type === 'init' && msg.name && msg.bytesBase64) {
       void handleInit(msg.name, msg.bytesBase64)
+    } else if (msg.type === 'triggerExportSummary') {
+      // From the "OMX: Export Summary as CSV" command palette action.
+      // Reuses the exact same export path as the in-webview Summary panel
+      // button (see formatNumber.ts's exportSummaryCSV()) — this is just a
+      // second trigger source, not separate logic.
+      const exported = exportSummaryCSV()
+      if (!exported) {
+        vscodeApi.postMessage({
+          type: 'showInfo',
+          message: 'No summary generated yet — open the Summary panel and click Generate first.',
+        })
+      }
     }
   })
 

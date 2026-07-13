@@ -15,6 +15,6 @@ export { OMXValidationError, validateHDF5MagicBytes } from './services/omxParser
 export { computeArithmetic, terminateWorkers } from './services/duckdbService.js'
 
 export { FILE_SIZE_WARN_BYTES, ACCEPTED_FILE_EXTENSIONS } from './utils/constants.js'
-export { formatFileSize, setFileSaveHandler } from './utils/formatNumber.js'
+export { formatFileSize, setFileSaveHandler, exportSummaryCSV } from './utils/formatNumber.js'
 export type { FileSaveHandler } from './utils/formatNumber.js'
 export { logger } from './utils/logger.js'

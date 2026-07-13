@@ -12,16 +12,38 @@ class OmxDocument implements vscode.CustomDocument {
 }
 
 class OmxEditorProvider implements vscode.CustomReadonlyEditorProvider<OmxDocument> {
+  // Tracks every open OMX webview panel so the command palette action can
+  // find whichever one is currently focused — WebviewPanel.active is a
+  // real, queryable property VS Code maintains for exactly this purpose.
+  private panels = new Set<vscode.WebviewPanel>()
+
   constructor(private readonly context: vscode.ExtensionContext) {}
 
   openCustomDocument(uri: vscode.Uri): OmxDocument {
     return new OmxDocument(uri)
   }
 
+  /**
+   * "OMX: Export Summary as CSV" command handler. Finds the active OMX
+   * webview (if any) and asks it to trigger the same CSV export path the
+   * in-webview Summary panel button already uses.
+   */
+  exportActiveSummary(): void {
+    const panel = [...this.panels].find((p) => p.active)
+    if (!panel) {
+      void vscode.window.showInformationMessage('OMX Viewer: no OMX file is currently active.')
+      return
+    }
+    void panel.webview.postMessage({ type: 'triggerExportSummary' })
+  }
+
   async resolveCustomEditor(
     document: OmxDocument,
     panel: vscode.WebviewPanel
   ): Promise<void> {
+    this.panels.add(panel)
+    panel.onDidDispose(() => this.panels.delete(panel))
+
     const webviewRoot = vscode.Uri.file(
       path.join(this.context.extensionPath, 'dist-webview')
     )
@@ -40,6 +62,7 @@ class OmxEditorProvider implements vscode.CustomReadonlyEditorProvider<OmxDocume
       detail?: string
       filename?: string
       content?: string
+      message?: string
     }) => {
       if (msg.type === 'ready') {
         try {
@@ -74,6 +97,8 @@ class OmxEditorProvider implements vscode.CustomReadonlyEditorProvider<OmxDocume
             `OMX Viewer: failed to save file — ${err instanceof Error ? err.message : String(err)}`
           )
         }
+      } else if (msg.type === 'showInfo' && msg.message) {
+        void vscode.window.showInformationMessage(msg.message)
       } else if (msg.type === 'log') {
         console.log('[omx-viewer webview]', msg.detail)
       }
@@ -116,15 +141,20 @@ class OmxEditorProvider implements vscode.CustomReadonlyEditorProvider<OmxDocume
 }
 
 export function activate(context: vscode.ExtensionContext): void {
+  const provider = new OmxEditorProvider(context)
+
   context.subscriptions.push(
     vscode.window.registerCustomEditorProvider(
       'omxViewer.editor',
-      new OmxEditorProvider(context),
+      provider,
       {
         webviewOptions: { retainContextWhenHidden: true },
         supportsMultipleEditorsPerDocument: false,
       }
-    )
+    ),
+    vscode.commands.registerCommand('omxViewer.exportSummaryCsv', () => {
+      provider.exportActiveSummary()
+    })
   )
 }
 

@@ -2,7 +2,7 @@
   // Component: SummaryPanel — Bottom drawer for aggregation summary table.
   import { store } from '../../state/matrixStore.svelte.js'
   import { AGGREGATION_FUNCTIONS, AGGREGATION_FUNCTION_LABELS, AGGREGATION_DIMENSIONS, AGGREGATION_DIMENSION_LABELS, AGGREGATION_SCOPES, AGGREGATION_SCOPE_LABELS } from '../../utils/constants.js'
-  import { rowToCSVLine, downloadTextFile } from '../../utils/formatNumber.js'
+  import { exportSummaryCSV } from '../../utils/formatNumber.js'
   import { runAggregation } from '../../services/duckdbService.js'
   import { logger } from '../../utils/logger.js'
 
@@ -21,14 +21,10 @@
     } finally { isGenerating = false }
   }
 
+  // Shared with the VS Code command palette action — see
+  // formatNumber.ts's exportSummaryCSV() for the actual CSV-building logic.
   function handleDownloadCSV() {
-    const res = store.summaryResult
-    if (!res || res.rows.length === 0) return
-    const header = res.columnNames.join(',')
-    const rows = res.rows.map((r) => rowToCSVLine(r, store.decimalPlaces))
-    const fn = AGGREGATION_FUNCTION_LABELS[res.config.fn].replace(/\s+/g, '_')
-    const dim = AGGREGATION_DIMENSION_LABELS[res.config.dimension].replace(/\s+/g, '_')
-    downloadTextFile([header, ...rows].join('\n'), `summary_${fn}_${dim}.csv`)
+    exportSummaryCSV()
   }
 
   const panelLabel = $derived(() => {
