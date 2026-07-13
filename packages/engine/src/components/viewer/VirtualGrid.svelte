@@ -207,6 +207,7 @@
     bind:this={scrollContainer}
     class="grid-scroll-container"
     role="grid"
+    tabindex="-1"
     aria-rowcount={store.nrows}
     aria-colcount={store.ncols}
     aria-label="Matrix data grid"

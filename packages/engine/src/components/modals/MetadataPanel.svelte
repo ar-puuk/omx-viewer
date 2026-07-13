@@ -78,17 +78,16 @@
           <div class="matrix-values" role="list">
             {#each store.fileMatrixIds as matrixId (matrixId)}
               {@const value = store.pinnedCell.valuesPerMatrix[matrixId]}
-              <!-- Using div + tabindex instead of button with listitem role to satisfy a11y -->
-              <div
-                class="matrix-value-row"
-                role="listitem"
-                tabindex="0"
-                onclick={() => store.setActiveTab(matrixId)}
-                onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') store.setActiveTab(matrixId) }}
-                title={`Switch to ${matrixId}`}
-              >
-                <span class="matrix-name truncate">{matrixId}</span>
-                <span class="matrix-val mono">{value !== undefined ? formatNumber(value, store.decimalPlaces) : '…'}</span>
+              <div role="listitem">
+                <button
+                  type="button"
+                  class="matrix-value-row"
+                  onclick={() => store.setActiveTab(matrixId)}
+                  title={`Switch to ${matrixId}`}
+                >
+                  <span class="matrix-name truncate">{matrixId}</span>
+                  <span class="matrix-val mono">{value !== undefined ? formatNumber(value, store.decimalPlaces) : '…'}</span>
+                </button>
               </div>
             {/each}
           </div>

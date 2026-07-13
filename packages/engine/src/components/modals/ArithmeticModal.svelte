@@ -77,8 +77,8 @@
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Operation</label>
-        <div class="op-pills" role="group" aria-label="Operation">
+        <span class="form-label" id="op-label">Operation</span>
+        <div class="op-pills" role="group" aria-labelledby="op-label">
           {#each ARITHMETIC_OPS as o}
             <button class="op-pill" class:is-active={op === o} onclick={() => { op = o }} aria-pressed={op === o} title={ARITHMETIC_OP_LABELS[o]}>{ARITHMETIC_OP_SYMBOLS[o]}</button>
           {/each}
