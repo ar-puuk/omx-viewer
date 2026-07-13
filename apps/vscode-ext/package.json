@@ -1,11 +1,11 @@
 {
-  "name": "omx-viewer-vscode",
+  "name": "omx-viewer",
   "displayName": "OMX Viewer",
   "description": "Browser-native OMX/HDF5 matrix explorer, now inside VS Code.",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "publisher": "omx-viewer",
+  "publisher": "arpuuk",
   "license": "MIT",
   "icon": "icon.png",
   "categories": ["Visualization", "Data Science"],
