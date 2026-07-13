@@ -6,11 +6,15 @@
  * a data: URL at build time, which works identically in both hosts. See the
  * comment above getMathWorker() in duckdbService.ts for why (two other
  * approaches were tried and failed in a webview specifically).
+ *
+ * No fonts.css import, unlike apps/web — the vscode theme (theme.css)
+ * maps --font-sans/--font-mono to var(--vscode-font-family)/
+ * var(--vscode-editor-font-family), so this follows the user's actual
+ * configured VS Code font instead of forcing a vendored one.
  */
 
 import { mount } from 'svelte'
 import VscodeApp from './VscodeApp.svelte'
-import '@omx-viewer/engine/styles/fonts.css'
 import '@omx-viewer/engine/styles/global.css'
 import '@omx-viewer/engine/styles/theme.css'
 import '@omx-viewer/engine/styles/grid.css'

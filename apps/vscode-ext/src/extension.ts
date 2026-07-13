@@ -92,7 +92,7 @@ class OmxEditorProvider implements vscode.CustomReadonlyEditorProvider<OmxDocume
     const csp = webview.cspSource
 
     return `<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="vscode">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'wasm-unsafe-eval' ${csp}; style-src ${csp} 'unsafe-inline'; worker-src ${csp} blob: data:; img-src ${csp} data:; font-src ${csp};">

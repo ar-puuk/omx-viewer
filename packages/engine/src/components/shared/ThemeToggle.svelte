@@ -1,8 +1,16 @@
 <script lang="ts">
   // Component: ThemeToggle — Dark/light theme toggle button.
+  // Hidden entirely under the VS Code theme (data-theme="vscode", set once
+  // by apps/vscode-ext's extension.ts) — there's nothing to toggle there,
+  // VS Code's own live theme is the source of truth. Self-contained check,
+  // no prop drilling through ViewerLayout; apps/web is unaffected since it
+  // never sets data-theme="vscode".
   import { store } from '../../state/matrixStore.svelte.js'
+
+  const isVscodeTheme = document.documentElement.dataset.theme === 'vscode'
 </script>
 
+{#if !isVscodeTheme}
 <button
   class="toggle btn-icon"
   onclick={() => store.toggleTheme()}
@@ -20,6 +28,7 @@
     </svg>
   {/if}
 </button>
+{/if}
 
 <style>
   .toggle { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); border-radius: var(--radius-md); transition: background-color var(--transition-fast), color var(--transition-fast); }

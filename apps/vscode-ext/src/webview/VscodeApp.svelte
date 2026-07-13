@@ -16,7 +16,12 @@
   declare function acquireVsCodeApi(): { postMessage: (msg: unknown) => void }
   const vscodeApi = acquireVsCodeApi()
 
-  $effect(() => { store.applyThemeToDom(store.theme) })
+  // No theme effect here, unlike apps/web's App.svelte — data-theme="vscode"
+  // is set once in extension.ts's HTML template and never touched by JS.
+  // VS Code's own theme is the live source of truth via var(--vscode-*)
+  // tokens, which VS Code updates automatically on theme change; applying
+  // store.theme ('dark'/'light', the browser toggle's state) here would
+  // fight that hardcoded value.
 
   // The default Blob+<a download> pattern doesn't reliably trigger a save
   // inside a sandboxed webview iframe — confirmed empirically (silent no-op)
