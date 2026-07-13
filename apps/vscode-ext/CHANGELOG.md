@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-07-13
+
+### Added
+
+- Changelog (this file).
+
 ### Fixed
 
 - Extension icon had an opaque dark background baked in, which looked out of place
@@ -53,6 +59,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Cross-matrix cell inspector.
 - Native VS Code theming — colors, spacing, and icons follow the active theme.
 
-[Unreleased]: https://github.com/ar-puuk/omx-viewer/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/ar-puuk/omx-viewer/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/ar-puuk/omx-viewer/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/ar-puuk/omx-viewer/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ar-puuk/omx-viewer/releases/tag/v0.1.0
