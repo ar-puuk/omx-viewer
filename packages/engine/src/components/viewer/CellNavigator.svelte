@@ -8,14 +8,29 @@
   let rowError = $state('')
   let colError = $state('')
 
+  // Resolve navigator input against whatever the grid header actually displays for that
+  // axis (getLabel() in VirtualGrid.svelte: lookup label if present, else raw index) —
+  // otherwise entering the zone ID shown in the header (often 1-indexed) lands one row/col
+  // off from the raw 0-based array index it was being matched against.
+  function resolveIndex(input: string, lookup: string[] | null, count: number): number | null {
+    const trimmed = input.trim()
+    if (lookup) {
+      const idx = lookup.indexOf(trimmed)
+      if (idx !== -1) return idx
+    }
+    const n = parseInt(trimmed, 10)
+    if (!isNaN(n) && n >= 0 && n < count) return n
+    return null
+  }
+
   function validate(): { row: number; col: number } | null {
     rowError = ''; colError = ''
-    const r = parseInt(store.navigatorRow, 10)
-    const c = parseInt(store.navigatorCol, 10)
-    let valid = true
-    if (isNaN(r) || r < 0 || r >= store.nrows) { rowError = `0 – ${store.nrows - 1}`; valid = false }
-    if (isNaN(c) || c < 0 || c >= store.ncols) { colError = `0 – ${store.ncols - 1}`; valid = false }
-    return valid ? { row: r, col: c } : null
+    const lookup = store.primaryLookup
+    const r = resolveIndex(store.navigatorRow, lookup, store.nrows)
+    const c = resolveIndex(store.navigatorCol, lookup, store.ncols)
+    if (r === null) { rowError = lookup ? 'Zone not found' : `0 – ${store.nrows - 1}` }
+    if (c === null) { colError = lookup ? 'Zone not found' : `0 – ${store.ncols - 1}` }
+    return (r !== null && c !== null) ? { row: r, col: c } : null
   }
 
   function handleGo() {

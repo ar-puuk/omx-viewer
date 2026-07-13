@@ -188,8 +188,11 @@ class AppState {
   // Cell pinning
   pinCell(row: number, col: number) {
     this.pinnedCell = { row, col, valuesPerMatrix: {}, isLoading: true }
-    this.navigatorRow = String(row)
-    this.navigatorCol = String(col)
+    // Mirror the grid header's label (lookup value if present, else raw index) so the
+    // navigator inputs round-trip through CellNavigator's lookup-aware resolveIndex().
+    const lookup = this.primaryLookup
+    this.navigatorRow = lookup ? (lookup[row] ?? String(row)) : String(row)
+    this.navigatorCol = lookup ? (lookup[col] ?? String(col)) : String(col)
   }
 
   setPinnedCellValues(values: Record<string, number>) {
