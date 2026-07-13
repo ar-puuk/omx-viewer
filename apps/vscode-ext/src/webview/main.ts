@@ -11,6 +11,12 @@
  * maps --font-sans/--font-mono to var(--vscode-font-family)/
  * var(--vscode-editor-font-family), so this follows the user's actual
  * configured VS Code font instead of forcing a vendored one.
+ *
+ * No codicon.css import here either — it's linked directly in extension.ts's
+ * HTML template instead, as a raw static asset copied by
+ * scripts/copy-codicons.js. See that script's header comment for why: Vite's
+ * CSS minifier corrupts codicon.css's glyph escapes if it's allowed to
+ * process the file via a JS import.
  */
 
 import { mount } from 'svelte'

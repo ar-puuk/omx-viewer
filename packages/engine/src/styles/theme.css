@@ -194,6 +194,21 @@
   --font-sans: var(--vscode-font-family);
   --font-mono: var(--vscode-editor-font-family);
 
+  /* Font SIZE scale is intentionally NOT overridden here (reverted) — tried
+     scaling it proportionally to --vscode-editor-font-size / --vscode-font-size,
+     but confirmed empirically that Positron's webview leaves BOTH tokens
+     empty (checked via the webview devtools console directly, not
+     assumed), so there's nothing real to scale from in this environment.
+     An empty custom property substituted into calc() makes the whole
+     declaration invalid at computed-value time, which fell through to the
+     browser's native default sizing (16px+) instead — visibly "too large,"
+     not a subtle miss. A var() fallback doesn't rescue this either: it only
+     triggers when a custom property is undeclared, not when it's declared-
+     but-empty, which is apparently what Positron does here. Rather than
+     chase further environment-specific CSS workarounds for tokens that
+     aren't actually populated, --font-size-* simply falls through to the
+     fixed, original :root values (global.css) — looks exactly like before. */
+
   /* Surfaces */
   --color-bg-base:        var(--vscode-editor-background);
   --color-bg-surface:     var(--vscode-sideBar-background);
@@ -269,6 +284,62 @@
   /* Code / metadata values */
   --color-code-bg:        var(--vscode-textCodeBlock-background);
   --color-code-text:      var(--vscode-textPreformat-foreground);
+
+  /* --------------------------------------------------------------------
+     Layout + motion — VS Code's own UI is flat (near-zero radius), has
+     no drop shadows for elevation (layering comes from borders instead),
+     is noticeably denser than a typical web product, and doesn't animate
+     state changes. Color alone doesn't read as "native" without this —
+     confirmed by eye after the color-only pass still looked web-app-shaped.
+     -------------------------------------------------------------------- */
+
+  /* Radius — VS Code buttons/inputs/dropdowns use a subtle 2px, not the
+     web app's 4–14px scale. --radius-full is left alone: it's used for
+     genuinely circular shapes (badges, progress bar caps), not panel
+     roundedness, and flattening it would break those shapes entirely. */
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
+
+  /* Shadows — none. Separation between surfaces comes from
+     --vscode-panel-border (already wired above), not elevation shadows.
+     Components that pair a shadow with a border (e.g. ArithmeticModal's
+     `box-shadow: var(--shadow-xl), 0 0 0 1px var(--color-border)`) keep
+     their border-based separation once the shadow term drops to none. */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-glow-accent: none;
+  --shadow-inset: none;
+
+  /* Spacing — tighter across the board, roughly VS Code's own density.
+     Proportionally larger cuts at the high end, where "airy product
+     spacing" is most visible; the already-tight low end barely moves. */
+  --space-1:  1px;
+  --space-2:  3px;
+  --space-3:  4px;
+  --space-4:  6px;
+  --space-5:  8px;
+  --space-6:  8px;
+  --space-8:  12px;
+  --space-10: 14px;
+  --space-12: 16px;
+  --space-16: 20px;
+  --space-20: 24px;
+  --space-24: 28px;
+  --space-32: 36px;
+
+  /* Motion — VS Code doesn't animate state changes; near-instant reads as
+     native, a 250ms slide-up reads as "web app dropped into an iframe."
+     --transition-spring drops its overshoot/bounce curve entirely, not
+     just its duration — a fast bounce is still a bounce, and VS Code's
+     own UI never bounces. */
+  --transition-fast:   80ms ease-out;
+  --transition-normal: 100ms ease-out;
+  --transition-slow:   120ms ease-out;
+  --transition-spring: 100ms ease-out;
 }
 
 /* --------------------------------------------------------------------------

@@ -6,6 +6,7 @@
   import { matrixSliceToCSV, downloadTextFile } from '../../utils/formatNumber.js'
   import { sliceMatrixRows } from '../../services/h5wasmService.js'
   import { logger } from '../../utils/logger.js'
+  import Icon from '../shared/Icon.svelte'
 
   interface Props { onnavigate: (row: number, col: number) => void; onopenarithmetic: () => void }
   const { onnavigate, onopenarithmetic }: Props = $props()
@@ -45,16 +46,22 @@
   <div class="divider-v" aria-hidden="true"></div>
   <div class="toolbar-actions">
     <button class="btn btn-ghost" onclick={onopenarithmetic} title="Matrix arithmetic" disabled={!store.file || (store.file?.matrixNames.length ?? 0) < 2}>
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7h10M7 2v10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <Icon codicon="add">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7h10M7 2v10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </Icon>
       Arithmetic
     </button>
     <button class="btn btn-ghost" class:is-active={store.summaryPanelOpen} onclick={() => store.toggleSummaryPanel()} title="Aggregation summary">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M1 3h12M1 7h8M1 11h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <Icon codicon="list-unordered">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M1 3h12M1 7h8M1 11h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </Icon>
       Summary
     </button>
     <button class="btn btn-ghost" onclick={handleExportCSV} disabled={!store.activeTab || isExporting} title="Export to CSV">
       {#if isExporting}<div class="spinner" aria-hidden="true"></div>{:else}
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <Icon codicon="download">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </Icon>
       {/if}
       CSV
     </button>

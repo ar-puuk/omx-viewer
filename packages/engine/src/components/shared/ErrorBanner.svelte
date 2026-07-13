@@ -1,6 +1,7 @@
 <script lang="ts">
   // Component: ErrorBanner — Dismissible error/warning display banner.
   import { store } from '../../state/matrixStore.svelte.js'
+  import Icon from './Icon.svelte'
 </script>
 
 {#if store.errors.length > 0}
@@ -11,9 +12,11 @@
         <span class="message">{err.message}</span>
         {#if err.dismissible}
           <button class="dismiss btn-icon" onclick={() => store.dismissError(err.id)} aria-label="Dismiss">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
+            <Icon codicon="close">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </Icon>
           </button>
         {/if}
       </div>

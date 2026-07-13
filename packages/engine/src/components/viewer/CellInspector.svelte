@@ -2,6 +2,7 @@
   // Component: CellInspector — Popover on cell click showing row/col/label/value.
   import { store } from '../../state/matrixStore.svelte.js'
   import { formatNumber } from '../../utils/formatNumber.js'
+  import Icon from '../shared/Icon.svelte'
 
   interface Props { anchorX?: number; anchorY?: number }
   const { anchorX = 0, anchorY = 0 }: Props = $props()
@@ -22,7 +23,9 @@
     <div class="inspector-header">
       <span class="label">Cell Inspector</span>
       <button class="close btn-icon" onclick={() => store.clearPinnedCell()} aria-label="Close inspector">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <Icon codicon="close" size={12}>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </Icon>
       </button>
     </div>
     <div class="inspector-body">

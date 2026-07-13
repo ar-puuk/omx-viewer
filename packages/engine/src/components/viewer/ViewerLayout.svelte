@@ -1,14 +1,24 @@
 <script lang="ts">
   // Component: ViewerLayout — Master layout after a file is loaded.
   import MatrixTabBar from './MatrixTabBar.svelte'
+  import MatrixDropdown from './MatrixDropdown.svelte'
   import GridToolbar from './GridToolbar.svelte'
   import VirtualGrid from './VirtualGrid.svelte'
   import MetadataPanel from '../modals/MetadataPanel.svelte'
   import SummaryPanel from '../modals/SummaryPanel.svelte'
   import ArithmeticModal from '../modals/ArithmeticModal.svelte'
   import ThemeToggle from '../shared/ThemeToggle.svelte'
+  import Icon from '../shared/Icon.svelte'
   import { store } from '../../state/matrixStore.svelte.js'
   import { closeCurrentFile } from '../../services/h5wasmService.js'
+
+  // "New file" only makes sense in apps/web, which falls back to
+  // LandingPage once store.hasFile is false. apps/vscode-ext's VscodeApp.svelte
+  // has no such fallback — it renders nothing once the file closes, since
+  // VS Code's own file explorer/"Open With" is the way to open a different
+  // file there — so this button must not exist under the vscode theme at
+  // all (confirmed: clicking it there previously blanked the whole webview).
+  const isVscodeTheme = document.documentElement.dataset.theme === 'vscode'
 
   let scrollToCell = $state<((row: number, col: number) => void) | undefined>(undefined)
   let showArithmeticModal = $state(false)
@@ -38,17 +48,23 @@
       {/if}
     </div>
     <div class="header-right">
-      <button class="btn btn-ghost new-file-btn" onclick={handleNewFile} title="Open a different file">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
-          <path d="M1.5 6.5h10M6.5 1.5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        New file
-      </button>
+      {#if isVscodeTheme}
+        <MatrixDropdown />
+      {:else}
+        <button class="btn btn-ghost new-file-btn" onclick={handleNewFile} title="Open a different file">
+          <Icon codicon="folder-opened" size={13}>
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <path d="M1.5 6.5h10M6.5 1.5l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </Icon>
+          New file
+        </button>
+      {/if}
       <ThemeToggle />
     </div>
   </header>
 
-  <!-- Tab Bar -->
+  <!-- Tab Bar (self-hides under the vscode theme — MatrixDropdown above replaces it) -->
   <MatrixTabBar />
 
   <!-- Main content -->

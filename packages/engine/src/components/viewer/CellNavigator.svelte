@@ -47,10 +47,15 @@
 </div>
 
 <style>
-  .navigator { display: flex; align-items: flex-end; gap: var(--space-4); }
-  .field { display: flex; flex-direction: column; gap: var(--space-1); position: relative; }
-  .field-label { font-size: var(--font-size-xs); color: var(--color-text-muted); font-family: var(--font-mono); letter-spacing: var(--letter-spacing-wide); }
-  .field-input { width: 72px; padding: var(--space-2) var(--space-3); font-size: var(--font-size-sm); font-family: var(--font-mono); background: var(--color-bg-elevated); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text-primary); transition: border-color var(--transition-fast); -moz-appearance: textfield; appearance: textfield; }
+  /* Inline label beside the input, not stacked above it — this is the only
+     toolbar control that was two lines tall while every sibling (pills,
+     buttons) is single-line, which is what forced --toolbar-height to grow
+     and threw off the toolbar's vertical balance. Single-line here lets the
+     toolbar go back to its original, more compact height. */
+  .navigator { display: flex; align-items: center; gap: var(--space-4); }
+  .field { display: flex; flex-direction: row; align-items: center; gap: var(--space-2); position: relative; }
+  .field-label { font-size: var(--font-size-xs); color: var(--color-text-muted); font-family: var(--font-mono); letter-spacing: var(--letter-spacing-wide); white-space: nowrap; }
+  .field-input { width: 56px; padding: var(--space-2) var(--space-3); font-size: var(--font-size-sm); font-family: var(--font-mono); background: var(--color-bg-elevated); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text-primary); transition: border-color var(--transition-fast); -moz-appearance: textfield; appearance: textfield; }
   .field-input::-webkit-outer-spin-button, .field-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .field-input:focus { border-color: var(--color-accent); outline: none; box-shadow: 0 0 0 2px var(--color-accent-subtle); }
   .has-error .field-input { border-color: var(--color-negative); }

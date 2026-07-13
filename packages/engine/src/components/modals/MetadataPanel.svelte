@@ -5,6 +5,7 @@
   import { computeMatrixStats } from '../../services/duckdbService.js'
   import { computeBasicStats } from '../../services/h5wasmService.js'
   import { logger } from '../../utils/logger.js'
+  import Icon from '../shared/Icon.svelte'
 
   interface Stats { min: number; max: number; mean: number }
   let stats = $state<Stats | null>(null)
@@ -32,7 +33,9 @@
       <div class="sidebar-header">
         <span class="sidebar-title">Info</span>
         <button class="btn-icon collapse-btn" onclick={() => store.toggleSidebar()} aria-label="Collapse sidebar">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <Icon codicon="chevron-left">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </Icon>
         </button>
       </div>
 
@@ -106,7 +109,9 @@
     </div>
   {:else}
     <button class="expand-btn btn-icon" onclick={() => store.toggleSidebar()} aria-label="Expand sidebar" title="Expand sidebar">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <Icon codicon="chevron-right">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </Icon>
     </button>
   {/if}
 </aside>

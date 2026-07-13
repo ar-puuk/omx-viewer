@@ -6,6 +6,7 @@
   import { computeArithmetic } from '../../services/duckdbService.js'
   import type { ArithmeticOp } from '../../utils/constants.js'
   import { logger } from '../../utils/logger.js'
+  import Icon from '../shared/Icon.svelte'
 
   interface Props { onclose: () => void }
   const { onclose }: Props = $props()
@@ -62,7 +63,9 @@
     <div class="modal-header">
       <h2 class="modal-title">Matrix Arithmetic</h2>
       <button class="btn-icon" onclick={onclose} aria-label="Close">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <Icon codicon="close">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </Icon>
       </button>
     </div>
     <div class="modal-body">

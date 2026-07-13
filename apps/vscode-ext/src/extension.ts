@@ -89,6 +89,13 @@ class OmxEditorProvider implements vscode.CustomReadonlyEditorProvider<OmxDocume
     const styleUri = webview.asWebviewUri(
       vscode.Uri.joinPath(webviewRoot, 'main.css')
     )
+    // Linked directly, not imported from main.ts — copied as a raw,
+    // unprocessed static asset by scripts/copy-codicons.js. Letting Vite's
+    // CSS pipeline touch this file corrupts its glyph escapes (confirmed:
+    // icons silently didn't render, no build error).
+    const codiconUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(webviewRoot, 'codicon.css')
+    )
     const csp = webview.cspSource
 
     return `<!DOCTYPE html>
@@ -97,6 +104,7 @@ class OmxEditorProvider implements vscode.CustomReadonlyEditorProvider<OmxDocume
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'wasm-unsafe-eval' ${csp}; style-src ${csp} 'unsafe-inline'; worker-src ${csp} blob: data:; img-src ${csp} data:; font-src ${csp};">
 <link rel="stylesheet" href="${styleUri}">
+<link rel="stylesheet" href="${codiconUri}">
 <title>OMX Viewer</title>
 </head>
 <body>
