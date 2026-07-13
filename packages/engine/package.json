@@ -1,0 +1,26 @@
+{
+  "name": "@omx-viewer/engine",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles/*": "./src/styles/*"
+  },
+  "scripts": {
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json"
+  },
+  "dependencies": {
+    "@fontsource/inter": "latest",
+    "@fontsource/jetbrains-mono": "latest",
+    "@tanstack/svelte-virtual": "latest",
+    "h5wasm": "latest",
+    "svelte": "^5.0.0"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "latest",
+    "svelte-check": "latest",
+    "typescript": "latest"
+  }
+}

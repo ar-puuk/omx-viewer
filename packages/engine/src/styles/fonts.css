@@ -1,0 +1,19 @@
+/**
+ * fonts.css — Inter (UI text) + JetBrains Mono (data cells, code), self-hosted
+ * via @fontsource. Vendored locally instead of loaded from fonts.googleapis.com
+ * — a live network dependency that fails silently (fonts just fall back, no
+ * error) and would break the "works fully offline after install" requirement
+ * for apps/vscode-ext. Benefits apps/web too: one less third-party network
+ * call, consistent with the app's own "no data ever leaves your machine"
+ * privacy claim.
+ */
+
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/600.css';
+@import '@fontsource/jetbrains-mono/700.css';

@@ -2,31 +2,17 @@
   "name": "omx-viewer",
   "version": "0.1.0",
   "type": "module",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "deploy": "npm run build && gh-pages -d dist",
-    "lint": "eslint src --ext .ts,.svelte",
-    "postinstall": "node scripts/copy-wasm.js && cp node_modules/coi-serviceworker/coi-serviceworker.js public/"
-  },
-  "dependencies": {
-    "@duckdb/duckdb-wasm": "latest",
-    "@tanstack/svelte-virtual": "latest",
-    "apache-arrow": "latest",
-    "h5wasm": "latest",
-    "svelte": "^5.0.0"
-  },
-  "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "latest",
-    "@typescript-eslint/eslint-plugin": "latest",
-    "@typescript-eslint/parser": "latest",
-    "coi-serviceworker": "latest",
-    "eslint": "latest",
-    "eslint-plugin-svelte": "latest",
-    "gh-pages": "latest",
-    "svelte-check": "latest",
-    "typescript": "latest",
-    "vite": "latest"
+    "dev": "npm run dev --workspace=apps/web",
+    "build": "npm run build --workspace=apps/web",
+    "preview": "npm run preview --workspace=apps/web",
+    "deploy": "npm run deploy --workspace=apps/web",
+    "lint": "npm run lint --workspace=apps/web",
+    "typecheck:engine": "npm run typecheck --workspace=packages/engine"
   }
 }

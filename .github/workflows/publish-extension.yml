@@ -1,0 +1,73 @@
+name: Package & Publish VS Code Extension
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/engine/**'
+      - 'apps/vscode-ext/**'
+      - '.github/workflows/publish-extension.yml'
+  # Manual trigger is the ONLY way this workflow actually publishes anywhere.
+  # A plain push just builds + packages a .vsix as a downloadable artifact —
+  # useful on its own (e.g. sideloading for testing) and safe to run
+  # automatically. Publishing to the Marketplace / Open VSX is a real,
+  # hard-to-reverse public action, so it stays behind an explicit human
+  # decision (the "publish" checkbox below), never automatic on push.
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish to VS Code Marketplace + Open VSX (requires VSCE_PAT / OVSX_PAT secrets)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: vscode-ext-package
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build extension
+        run: npm run build --workspace=apps/vscode-ext
+
+      - name: Package .vsix
+        working-directory: apps/vscode-ext
+        run: npx --yes @vscode/vsce package --no-dependencies --out omx-viewer-vscode.vsix
+
+      - name: Upload .vsix artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: omx-viewer-vscode-vsix
+          path: apps/vscode-ext/omx-viewer-vscode.vsix
+
+      # Everything below only runs on a manual trigger with publish=true.
+      - name: Publish to VS Code Marketplace
+        if: github.event_name == 'workflow_dispatch' && inputs.publish
+        working-directory: apps/vscode-ext
+        run: npx --yes @vscode/vsce publish --no-dependencies --packagePath omx-viewer-vscode.vsix -p "${{ secrets.VSCE_PAT }}"
+
+      - name: Publish to Open VSX
+        if: github.event_name == 'workflow_dispatch' && inputs.publish
+        working-directory: apps/vscode-ext
+        run: npx --yes ovsx publish omx-viewer-vscode.vsix -p "${{ secrets.OVSX_PAT }}"

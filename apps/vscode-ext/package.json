@@ -1,0 +1,77 @@
+{
+  "name": "omx-viewer-vscode",
+  "displayName": "OMX Viewer",
+  "description": "Browser-native OMX/HDF5 matrix explorer, now inside VS Code.",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "publisher": "omx-viewer",
+  "license": "MIT",
+  "icon": "icon.png",
+  "categories": ["Visualization", "Data Science"],
+  "keywords": ["omx", "hdf5", "matrix", "transportation", "travel demand model"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ar-puuk/omx-viewer"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "main": "./out/extension.cjs",
+  "activationEvents": [],
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "omxViewer.editor",
+        "displayName": "OMX Viewer",
+        "selector": [
+          {
+            "filenamePattern": "*.omx"
+          },
+          {
+            "filenamePattern": "*.h5"
+          },
+          {
+            "filenamePattern": "*.hdf5"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "commands": [
+      {
+        "command": "omxViewer.exportSummaryCsv",
+        "title": "OMX: Export Summary as CSV",
+        "icon": "$(export)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "omxViewer.exportSummaryCsv",
+          "when": "activeCustomEditorId == 'omxViewer.editor'",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build:extension": "node esbuild.js",
+    "build:webview": "node scripts/copy-codicons.js && vite build --config vite.webview.config.ts",
+    "build": "npm run build:extension && npm run build:webview",
+    "vscode:prepublish": "npm run build"
+  },
+  "dependencies": {
+    "@omx-viewer/engine": "*",
+    "@vscode/codicons": "^0.0.45",
+    "svelte": "^5.0.0"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "latest",
+    "@types/node": "latest",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "latest",
+    "typescript": "latest",
+    "vite": "latest"
+  }
+}

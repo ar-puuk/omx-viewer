@@ -3,13 +3,22 @@ node_modules/
 
 # Build output
 dist/
+dist-webview/
+out/
 .svelte-kit/
+
+# Packaged VS Code extension artifacts
+*.vsix
 
 # h5wasm WASM files copied by postinstall (regenerated on npm install)
 public/h5wasm/
 
 # coi-serviceworker copied by postinstall (regenerated on npm install)
 public/coi-serviceworker.js
+
+# codicon.css/codicon.ttf copied by apps/vscode-ext's build:webview script
+# (regenerated from node_modules on every build)
+apps/vscode-ext/public/
 
 # Editor / OS
 .DS_Store

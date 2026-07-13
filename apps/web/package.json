@@ -1,0 +1,33 @@
+{
+  "name": "@omx-viewer/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "npm run build && gh-pages -d dist",
+    "lint": "eslint src",
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json",
+    "postinstall": "node scripts/copy-wasm.js"
+  },
+  "dependencies": {
+    "@omx-viewer/engine": "*",
+    "svelte": "^5.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "latest",
+    "@sveltejs/vite-plugin-svelte": "latest",
+    "@typescript-eslint/eslint-plugin": "latest",
+    "@typescript-eslint/parser": "latest",
+    "coi-serviceworker": "latest",
+    "eslint": "latest",
+    "eslint-plugin-svelte": "latest",
+    "gh-pages": "latest",
+    "globals": "latest",
+    "svelte-check": "latest",
+    "typescript": "latest",
+    "vite": "latest"
+  }
+}
