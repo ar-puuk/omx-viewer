@@ -3,7 +3,12 @@ node_modules/
 
 # Build output
 dist/
+dist-webview/
+out/
 .svelte-kit/
+
+# Packaged VS Code extension artifacts
+*.vsix
 
 # h5wasm WASM files copied by postinstall (regenerated on npm install)
 public/h5wasm/

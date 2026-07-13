@@ -1,0 +1,123 @@
+import * as vscode from 'vscode'
+import * as path from 'path'
+
+/**
+ * OmxDocument — minimal CustomDocument wrapper. No in-memory model beyond
+ * the URI: h5wasm (inside the webview) owns the actual parsed file state.
+ * Read-only for Stage 1 — no save/revert/backup needed.
+ */
+class OmxDocument implements vscode.CustomDocument {
+  constructor(public readonly uri: vscode.Uri) {}
+  dispose(): void {}
+}
+
+class OmxEditorProvider implements vscode.CustomReadonlyEditorProvider<OmxDocument> {
+  constructor(private readonly context: vscode.ExtensionContext) {}
+
+  openCustomDocument(uri: vscode.Uri): OmxDocument {
+    return new OmxDocument(uri)
+  }
+
+  async resolveCustomEditor(
+    document: OmxDocument,
+    panel: vscode.WebviewPanel
+  ): Promise<void> {
+    const webviewRoot = vscode.Uri.file(
+      path.join(this.context.extensionPath, 'dist-webview')
+    )
+
+    panel.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [webviewRoot],
+    }
+
+    // Register the message listener BEFORE setting .html — if the webview
+    // loads and posts 'ready' before a listener exists, that message is
+    // lost with no error, no retry, and no visible symptom other than the
+    // viewer silently never receiving a file.
+    panel.webview.onDidReceiveMessage(async (msg: {
+      type: string
+      detail?: string
+      filename?: string
+      content?: string
+    }) => {
+      if (msg.type === 'ready') {
+        try {
+          const bytes = await vscode.workspace.fs.readFile(document.uri)
+          const name = path.basename(document.uri.fsPath)
+          // Base64, not a raw Uint8Array/Buffer — verified empirically that
+          // VS Code's webview postMessage does NOT preserve typed arrays via
+          // structured clone as assumed; it JSON-serializes them, and since
+          // readFile() returns a Node Buffer, that means Buffer.toJSON()'s
+          // {type:'Buffer', data:[...]} wrapper on the receiving end. Base64
+          // sidesteps that ambiguity entirely and is more compact than the
+          // number-array shape we were already accidentally getting.
+          const base64 = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength).toString('base64')
+          await panel.webview.postMessage({ type: 'init', name, bytesBase64: base64 })
+        } catch (err) {
+          void vscode.window.showErrorMessage(
+            `OMX Viewer: failed to read file — ${err instanceof Error ? err.message : String(err)}`
+          )
+        }
+      } else if (msg.type === 'saveFile' && msg.filename && msg.content !== undefined) {
+        try {
+          const saveUri = await vscode.window.showSaveDialog({
+            defaultUri: vscode.Uri.file(msg.filename),
+            filters: { 'CSV files': ['csv'], 'All files': ['*'] },
+          })
+          if (saveUri) {
+            await vscode.workspace.fs.writeFile(saveUri, Buffer.from(msg.content, 'utf-8'))
+            void vscode.window.showInformationMessage(`Saved ${path.basename(saveUri.fsPath)}`)
+          }
+        } catch (err) {
+          void vscode.window.showErrorMessage(
+            `OMX Viewer: failed to save file — ${err instanceof Error ? err.message : String(err)}`
+          )
+        }
+      } else if (msg.type === 'log') {
+        console.log('[omx-viewer webview]', msg.detail)
+      }
+    })
+
+    panel.webview.html = this.getHtml(panel.webview, webviewRoot)
+  }
+
+  private getHtml(webview: vscode.Webview, webviewRoot: vscode.Uri): string {
+    const scriptUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(webviewRoot, 'main.js')
+    )
+    const styleUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(webviewRoot, 'main.css')
+    )
+    const csp = webview.cspSource
+
+    return `<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'wasm-unsafe-eval' ${csp}; style-src ${csp} 'unsafe-inline'; worker-src ${csp} blob: data:; img-src ${csp} data:; font-src ${csp};">
+<link rel="stylesheet" href="${styleUri}">
+<title>OMX Viewer</title>
+</head>
+<body>
+<div id="app"></div>
+<script type="module" src="${scriptUri}"></script>
+</body>
+</html>`
+  }
+}
+
+export function activate(context: vscode.ExtensionContext): void {
+  context.subscriptions.push(
+    vscode.window.registerCustomEditorProvider(
+      'omxViewer.editor',
+      new OmxEditorProvider(context),
+      {
+        webviewOptions: { retainContextWhenHidden: true },
+        supportsMultipleEditorsPerDocument: false,
+      }
+    )
+  )
+}
+
+export function deactivate(): void {}
