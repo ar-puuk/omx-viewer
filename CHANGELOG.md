@@ -8,6 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-07-13
+
+### Fixed
+
+- `.gitignore` patterns for `apps/web/public/h5wasm/` and
+  `apps/web/public/coi-serviceworker.js` were root-anchored and never actually
+  matched those paths, so the latter was tracked in git despite being a
+  regenerated build artifact. Fixed the patterns and untracked the file.
+
+### Changed
+
+- Moved this changelog from `apps/vscode-ext/CHANGELOG.md` to the repo root as
+  the single source of truth for the web app, extension, and shared engine
+  together; the extension's own copy is now generated at build time.
+
 ## [0.1.2] - 2026-07-13
 
 ### Added
@@ -76,7 +91,8 @@ Initial release, following the restructure into a shared-engine monorepo
 - Cross-matrix cell inspector.
 - Dark/light theme toggle (web app) / native VS Code theming (extension).
 
-[Unreleased]: https://github.com/ar-puuk/omx-viewer/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/ar-puuk/omx-viewer/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/ar-puuk/omx-viewer/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/ar-puuk/omx-viewer/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/ar-puuk/omx-viewer/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ar-puuk/omx-viewer/releases/tag/v0.1.0

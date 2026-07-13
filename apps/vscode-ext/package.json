@@ -2,7 +2,7 @@
   "name": "omx-viewer",
   "displayName": "OMX Viewer",
   "description": "Browser-native OMX/HDF5 matrix explorer, now inside VS Code.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "type": "module",
   "publisher": "arpuuk",
