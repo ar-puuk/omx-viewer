@@ -7,6 +7,9 @@
   "type": "module",
   "publisher": "omx-viewer",
   "license": "MIT",
+  "icon": "icon.png",
+  "categories": ["Visualization", "Data Science"],
+  "keywords": ["omx", "hdf5", "matrix", "transportation", "travel demand model"],
   "repository": {
     "type": "git",
     "url": "https://github.com/ar-puuk/omx-viewer"
