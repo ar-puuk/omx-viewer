@@ -32,15 +32,26 @@
     vscodeApi.postMessage({ type: 'saveFile', filename, content })
   })
 
-  function base64ToBytes(b64: string): Uint8Array {
+  // Decodes one base64 chunk directly into `target` at `offset` — never
+  // materializes the whole file as one JS string. Returns the number of
+  // bytes written so the caller can advance its offset.
+  function decodeBase64Into(b64: string, target: Uint8Array, offset: number): number {
     const binary = atob(b64)
-    const bytes = new Uint8Array(binary.length)
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-    return bytes
+    for (let i = 0; i < binary.length; i++) target[offset + i] = binary.charCodeAt(i)
+    return binary.length
   }
 
-  async function handleInit(name: string, bytesBase64: string) {
-    const bytes = base64ToBytes(bytesBase64)
+  // Chunked file transfer state — see extension.ts's 'initStart'/'initChunk'
+  // messages. A single base64 string for the whole file would exceed V8's
+  // max string length for files above ~400MB, so the extension host sends
+  // it in pieces and this reassembles them into one preallocated buffer.
+  let pendingName: string | undefined
+  let pendingBytes: Uint8Array | undefined
+  let pendingOffset = 0
+  let pendingChunkCount = 0
+  let receivedChunks = 0
+
+  async function handleInit(name: string, bytes: Uint8Array) {
     store.setLoading(true, 'Opening file…')
     try {
       const parsedFile = await openOMXFile(name, bytes)
@@ -61,9 +72,27 @@
   }
 
   window.addEventListener('message', (event: MessageEvent) => {
-    const msg = event.data as { type: string; name?: string; bytesBase64?: string }
-    if (msg.type === 'init' && msg.name && msg.bytesBase64) {
-      void handleInit(msg.name, msg.bytesBase64)
+    const msg = event.data as {
+      type: string
+      name?: string
+      bytesBase64?: string
+      totalBytes?: number
+      chunkCount?: number
+    }
+    if (msg.type === 'initStart' && msg.name && msg.totalBytes !== undefined && msg.chunkCount) {
+      pendingName = msg.name
+      pendingBytes = new Uint8Array(msg.totalBytes)
+      pendingOffset = 0
+      pendingChunkCount = msg.chunkCount
+      receivedChunks = 0
+    } else if (msg.type === 'initChunk' && msg.bytesBase64 !== undefined && pendingBytes) {
+      pendingOffset += decodeBase64Into(msg.bytesBase64, pendingBytes, pendingOffset)
+      receivedChunks++
+      if (receivedChunks === pendingChunkCount && pendingName) {
+        void handleInit(pendingName, pendingBytes)
+        pendingName = undefined
+        pendingBytes = undefined
+      }
     } else if (msg.type === 'triggerExportSummary') {
       // From the "OMX: Export Summary as CSV" command palette action.
       // Reuses the exact same export path as the in-webview Summary panel

@@ -68,6 +68,7 @@ class OmxEditorProvider implements vscode.CustomReadonlyEditorProvider<OmxDocume
         try {
           const bytes = await vscode.workspace.fs.readFile(document.uri)
           const name = path.basename(document.uri.fsPath)
+          const totalBytes = bytes.byteLength
           // Base64, not a raw Uint8Array/Buffer — verified empirically that
           // VS Code's webview postMessage does NOT preserve typed arrays via
           // structured clone as assumed; it JSON-serializes them, and since
@@ -75,8 +76,25 @@ class OmxEditorProvider implements vscode.CustomReadonlyEditorProvider<OmxDocume
           // {type:'Buffer', data:[...]} wrapper on the receiving end. Base64
           // sidesteps that ambiguity entirely and is more compact than the
           // number-array shape we were already accidentally getting.
-          const base64 = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength).toString('base64')
-          await panel.webview.postMessage({ type: 'init', name, bytesBase64: base64 })
+          //
+          // Sent in chunks, not one Buffer.toString('base64') call — base64
+          // inflates size ~4/3, and a single base64 string for a file above
+          // ~400MB exceeds V8's ~512MiB max string length ("Cannot create a
+          // string longer than 0x1fffffe8 characters"), which threw here
+          // before the webview ever saw a byte.
+          const CHUNK_BYTES = 32 * 1024 * 1024
+          const chunkCount = Math.max(1, Math.ceil(totalBytes / CHUNK_BYTES))
+          await panel.webview.postMessage({ type: 'initStart', name, totalBytes, chunkCount })
+          for (let i = 0; i < chunkCount; i++) {
+            const start = i * CHUNK_BYTES
+            const end = Math.min(start + CHUNK_BYTES, totalBytes)
+            const chunkBase64 = Buffer.from(
+              bytes.buffer,
+              bytes.byteOffset + start,
+              end - start
+            ).toString('base64')
+            await panel.webview.postMessage({ type: 'initChunk', index: i, bytesBase64: chunkBase64 })
+          }
         } catch (err) {
           void vscode.window.showErrorMessage(
             `OMX Viewer: failed to read file — ${err instanceof Error ? err.message : String(err)}`

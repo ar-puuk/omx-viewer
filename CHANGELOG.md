@@ -8,6 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-07-14
+
+### Fixed
+
+- VS Code extension: opening large OMX files (roughly 400MB and up) failed with
+  "Cannot create a string longer than 0x1fffffe8 characters." The extension host
+  was base64-encoding the entire file in one string before sending it to the
+  webview, which exceeds V8's maximum string length for large files. The file is
+  now transferred in 32MB chunks and reassembled directly into a preallocated
+  buffer in the webview, raising the practical file size ceiling well into
+  multi-gigabyte territory.
+
 ## [0.1.3] - 2026-07-13
 
 ### Fixed
@@ -91,7 +103,8 @@ Initial release, following the restructure into a shared-engine monorepo
 - Cross-matrix cell inspector.
 - Dark/light theme toggle (web app) / native VS Code theming (extension).
 
-[Unreleased]: https://github.com/ar-puuk/omx-viewer/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/ar-puuk/omx-viewer/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/ar-puuk/omx-viewer/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/ar-puuk/omx-viewer/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/ar-puuk/omx-viewer/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/ar-puuk/omx-viewer/compare/v0.1.0...v0.1.1
